@@ -1,4 +1,4 @@
-/*  Copyright 2013 MaidSafe.net limited
+/*  Copyright 2014 MaidSafe.net limited
 
     This MaidSafe Software is licensed to you under (1) the MaidSafe.net Commercial License,
     version 1.0 or later, or (2) The General Public License (GPL), version 3, depending on which
@@ -16,8 +16,6 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-// placeholder for including all api headers at one place
-
-namespace maidsafe {
-
-}  // namespace maidsafe
+#include "maidsafe/api.h"
+#include "maidsafe/client.h"
+#include "maidsafe/encryptor.h"
