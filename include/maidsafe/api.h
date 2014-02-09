@@ -16,9 +16,11 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-
-// placeholder for main api header
+#ifndef MAIDSAFE_API_H_
+#define MAIDSAFE_API_H_
 
 namespace maidsafe {
 
 }  // namespace maidsafe
+
+#endif  // MAIDSAFE_API_H_

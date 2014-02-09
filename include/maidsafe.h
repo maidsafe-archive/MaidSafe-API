@@ -16,6 +16,11 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#ifndef MAIDSAFE_H_
+#define MAIDSAFE_H_
+
 #include "maidsafe/api.h"
 #include "maidsafe/client.h"
 #include "maidsafe/encryptor.h"
+
+#endif  // MAIDSAFE_H_

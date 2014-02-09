@@ -75,5 +75,4 @@ class Client {
 
 }  // namespace maidsafe
 
-#endif // MAIDSAFE_CLIENT_H_
-
+#endif  // MAIDSAFE_CLIENT_H_
