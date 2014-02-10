@@ -38,6 +38,11 @@ class Client {
   typedef boost::future<void> PutFuture;
   typedef boost::future<std::vector<StructuredDataVersions::VersionName>> VersionNamesFuture;
 
+  typedef boost::signals2::signal<void (int32_t)> OnNetworkHealthChange;
+  typedef boost::signals2::signal<void (const ImmutableData::Name&)> OnImmutableDataPutFailure;
+
+
+  Client();
   ~Client(); // Should call SaveSession
 
   void SaveSession();  // NO THROW
@@ -61,16 +66,16 @@ class Client {
                                const std::chrono::steady_clock::duration& timeout =
                                    std::chrono::seconds(10));
 
-  // FIXME
-  template <typename DataName>
-  PutFuture PutVersion(const DataName& data_name,
-                  const StructuredDataVersions::VersionName& old_version_name,
-                  const StructuredDataVersions::VersionName& new_version_name);
-  // FIXME
-  template <typename DataName>
-  void DeleteBranchUntilFork(const DataName& data_name,
+  PutFuture PutVersion(const MutableData::Name& mutable_data_name,
+                       const StructuredDataVersions::VersionName& old_version_name,
+                       const StructuredDataVersions::VersionName& new_version_name);
+
+  void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
 
+ private :
+  class Impl;
+  std::unique_ptr<Impl> pimpl_;
 };
 
 }  // namespace maidsafe

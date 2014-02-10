@@ -19,7 +19,14 @@
 #ifndef MAIDSAFE_CLIENT_IMPL_H_
 #define MAIDSAFE_CLIENT_IMPL_H_
 
+
+#include "maidsafe/client.h"
+
 namespace maidsafe {
+
+class Client::Impl {
+
+};
 
 }  // namespace maidsafe
 
