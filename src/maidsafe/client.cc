@@ -22,7 +22,7 @@
 namespace maidsafe {
 
 Client::Client()
-    : pimpl_(new Impl()) {}
+    : pimpl_(new detail::ClientImpl()) {}
 
 Client::~Client() {
   SaveSession();
@@ -33,41 +33,41 @@ void Client::SaveSession() {
   pimpl_->SaveSession();
 }
 
-// immutable data
-ImmutableDataFuture Client::Get(const ImmutableData::Name& /*immutable_data_name*/,
-  const std::chrono::steady_clock::duration& /*timeout*/) {
-
+Client::ImmutableDataFuture Client::Get(const ImmutableData::Name& immutable_data_name,
+  const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->Get(immutable_data_name, timeout);
 }
 
-PutFuture Client::Put(const ImmutableData& /*immutable_data*/,
-                      const std::chrono::steady_clock::duration& /*timeout*/) {
-
+Client::PutFuture Client::Put(const ImmutableData& immutable_data,
+                              const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->Put(immutable_data, timeout);
 }
 
-void Client::Delete(const ImmutableData::Name& /*immutable_data_name*/) {
-
+void Client::Delete(const ImmutableData::Name& immutable_data_name) {
+  pimpl_->Delete(immutable_data_name);
 }
 
-VersionNamesFuture Client::GetVersions(const MutableData::Name& /*mutable_data_name*/,
-    const std::chrono::steady_clock::duration& /*timeout*/) {
-
+Client::VersionNamesFuture Client::GetVersions(const MutableData::Name& mutable_data_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->GetVersions(mutable_data_name, timeout);
 }
 
-VersionNamesFuture Client::GetBranch(const MutableData::Name& /*mutable_data_name*/,
-                             const StructuredDataVersions::VersionName& /*branch_tip*/,
-                             const std::chrono::steady_clock::duration& /*timeout*/) {
-
+Client::VersionNamesFuture Client::GetBranch(
+    const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& branch_tip,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->GetBranch(mutable_data_name, branch_tip, timeout);
 }
 
-PutFuture Client::PutVersion(const MutableData::Name& /*mutable_data_name*/,
-                             const StructuredDataVersions::VersionName& /*old_version_name*/,
-                             const StructuredDataVersions::VersionName& /*new_version_name*/) {
-
+Client::PutFuture Client::PutVersion(const MutableData::Name& mutable_data_name,
+                                     const StructuredDataVersions::VersionName& old_version_name,
+                                     const StructuredDataVersions::VersionName& new_version_name) {
+  return pimpl_->PutVersion(mutable_data_name, old_version_name, new_version_name);
 }
 
-void Client::DeleteBranchUntilFork(const MutableData::Name& /*mutable_data_name*/,
-                                   const StructuredDataVersions::VersionName& /*branch_tip*/) {
-
+void Client::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
+                                   const StructuredDataVersions::VersionName& branch_tip) {
+  pimpl_->DeleteBranchUntilFork(mutable_data_name, branch_tip);
 }
 
 }  // namespace maidsafe

@@ -16,18 +16,48 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_CLIENT_IMPL_H_
-#define MAIDSAFE_CLIENT_IMPL_H_
+#ifndef MAIDSAFE_DETAIL_CLIENT_IMPL_H_
+#define MAIDSAFE_DETAIL_CLIENT_IMPL_H_
 
 
 #include "maidsafe/client.h"
 
 namespace maidsafe {
 
-class Client::Impl {
+namespace detail {
+
+class ClientImpl {
+
+ public:
+
+  void SaveSession();  // NO THROW
+
+  Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
+                                  const std::chrono::steady_clock::duration& timeout);
+
+  Client::PutFuture Put(const ImmutableData& immutable_data,
+                        const std::chrono::steady_clock::duration& timeout);
+
+  void Delete(const ImmutableData::Name& immutable_data_name);
+
+  Client::VersionNamesFuture GetVersions(const MutableData::Name& mutable_data_name,
+                                         const std::chrono::steady_clock::duration& timeout);
+
+  Client::VersionNamesFuture GetBranch(const MutableData::Name& mutable_data_name,
+                                       const StructuredDataVersions::VersionName& branch_tip,
+                                       const std::chrono::steady_clock::duration& timeout);
+
+  Client::PutFuture PutVersion(const MutableData::Name& mutable_data_name,
+                               const StructuredDataVersions::VersionName& old_version_name,
+                               const StructuredDataVersions::VersionName& new_version_name);
+
+  void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
+                             const StructuredDataVersions::VersionName& branch_tip);
 
 };
 
+}  // namespace detail
+
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_CLIENT_IMPL_H_
+#endif  // MAIDSAFE_DETAIL_CLIENT_IMPL_H_

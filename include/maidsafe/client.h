@@ -31,6 +31,10 @@
 
 namespace maidsafe {
 
+namespace detail {
+  class ClientImpl;
+}
+
 class Client {
  public:
 
@@ -74,8 +78,7 @@ class Client {
                              const StructuredDataVersions::VersionName& branch_tip);
 
  private :
-  class Impl;
-  std::unique_ptr<Impl> pimpl_;
+  std::unique_ptr<detail::ClientImpl> pimpl_;
 };
 
 }  // namespace maidsafe
