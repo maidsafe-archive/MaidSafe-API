@@ -16,6 +16,23 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#include "maidsafe/api.h"
+#include "maidsafe/client.h"
+
 namespace maidsafe {
+
+
+std::unique_ptr<Client> CreateAccount(const maidsafe::passport::detail::Keyword &/*keyword*/,
+  const passport::detail::Password& /*password*/) {
+//
+  std::unique_ptr<Client> client(new Client());
+  return std::move(client);
+}
+
+std::unique_ptr<Client> Login(const passport::detail::Keyword& /*keyword*/,
+                              const passport::detail::Password& /*password*/) {
+    std::unique_ptr<Client> client(new Client());
+    return std::move(client);
+}
 
 }  // namespace maidsafe

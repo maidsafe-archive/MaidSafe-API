@@ -54,6 +54,8 @@ class ClientImpl {
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
 
+ private:
+
 };
 
 }  // namespace detail

@@ -19,7 +19,17 @@
 #ifndef MAIDSAFE_API_H_
 #define MAIDSAFE_API_H_
 
+#include "maidsafe/passport/detail/secure_string.h"
+
 namespace maidsafe {
+
+class Client;
+
+std::unique_ptr<Client> CreateAccount(const passport::detail::Keyword& keyword,
+                                      const passport::detail::Password& password);
+
+std::unique_ptr<Client> Login(const passport::detail::Keyword& keyword,
+                              const passport::detail::Password& password);
 
 }  // namespace maidsafe
 
