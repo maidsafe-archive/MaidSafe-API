@@ -23,6 +23,14 @@ namespace maidsafe {
 
 namespace detail {
 
+
+ClientImpl::ClientImpl()
+    : asio_service_(2),
+      routing_(),
+      data_getter_(),
+      maid_node_nfs_() {
+}
+
 // NO THROW
 void ClientImpl::SaveSession() {
 }

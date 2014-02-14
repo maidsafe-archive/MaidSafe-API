@@ -22,6 +22,12 @@
 
 #include "maidsafe/client.h"
 
+#include "maidsafe/routing/routing_api.h"
+
+#include "maidsafe/nfs/client/data_getter.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
+
+
 namespace maidsafe {
 
 namespace detail {
@@ -29,6 +35,8 @@ namespace detail {
 class ClientImpl {
 
  public:
+
+  ClientImpl();
 
   void SaveSession();  // NO THROW
 
@@ -55,7 +63,10 @@ class ClientImpl {
                              const StructuredDataVersions::VersionName& branch_tip);
 
  private:
-
+  AsioService asio_service_;
+  std::unique_ptr<routing::Routing> routing_;
+  std::unique_ptr<nfs_client::DataGetter> data_getter_;
+  std::unique_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
 };
 
 }  // namespace detail
