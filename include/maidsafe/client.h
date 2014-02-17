@@ -26,6 +26,9 @@
 #include "maidsafe/data_types/mutable_data.h"
 #include "maidsafe/data_types/structured_data_versions.h"
 
+#include "maidsafe/passport/types.h"
+
+
 #ifndef MAIDSAFE_CLIENT_H_
 #define MAIDSAFE_CLIENT_H_
 
@@ -45,11 +48,22 @@ class Client {
   typedef boost::signals2::signal<void (int32_t)> OnNetworkHealthChange;
   typedef boost::signals2::signal<void (const ImmutableData::Name&)> OnImmutableDataPutFailure;
 
+  // For already existing accounts
+  Client(const passport::Maid& maid);
 
-  Client();
-  ~Client(); // Should call SaveSession
+  // For new accounts
+  // throws on failure to create account
+  Client(const passport::Maid& maid, const passport::Anmaid& anmaid);
 
-  void SaveSession();  // NO THROW
+  // FIXME need to pass registration token here as pmid key might not be available to the client
+  // Discuss
+  void RegisterVault();
+
+  ~Client();
+//=========================== Signals ==============================================================
+
+
+//=========================== Data access methods ==================================================
 
   // immutable data
   ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,

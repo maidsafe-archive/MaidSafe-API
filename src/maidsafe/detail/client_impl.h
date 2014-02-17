@@ -36,9 +36,9 @@ class ClientImpl {
 
  public:
 
-  ClientImpl();
-
-  void SaveSession();  // NO THROW
+  ClientImpl(const passport::Maid& maid);
+  // throws on failure to create account
+  ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid);
 
   Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
                                   const std::chrono::steady_clock::duration& timeout);
@@ -65,7 +65,6 @@ class ClientImpl {
  private:
   AsioService asio_service_;
   std::unique_ptr<routing::Routing> routing_;
-  std::unique_ptr<nfs_client::DataGetter> data_getter_;
   std::unique_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
 };
 

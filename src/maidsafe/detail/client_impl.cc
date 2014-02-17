@@ -24,15 +24,21 @@ namespace maidsafe {
 namespace detail {
 
 
-ClientImpl::ClientImpl()
+ClientImpl::ClientImpl(const passport::Maid &maid)
     : asio_service_(2),
-      routing_(),
-      data_getter_(),
-      maid_node_nfs_() {
+      routing_(new routing::Routing(maid)),
+      maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {  // FIXME need pmid hint here
+// Start routing object
+// FIXME decide on how to get access to bootstrap endpoints
+
 }
 
-// NO THROW
-void ClientImpl::SaveSession() {
+ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& /*anmaid*/)
+    : asio_service_(2),
+      routing_(new routing::Routing(maid)),
+      maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {
+// Call create account
+// throw on failure to create account
 }
 
 Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& /*immutable_data_name*/,

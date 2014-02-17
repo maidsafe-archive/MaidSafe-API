@@ -25,13 +25,13 @@ namespace maidsafe {
 std::unique_ptr<Client> CreateAccount(const maidsafe::passport::detail::Keyword &/*keyword*/,
   const passport::detail::Password& /*password*/) {
 //
-  std::unique_ptr<Client> client(new Client());
+  std::unique_ptr<Client> client/*(new Client())*/;
   return std::move(client);
 }
 
 std::unique_ptr<Client> Login(const passport::detail::Keyword& /*keyword*/,
                               const passport::detail::Password& /*password*/) {
-    std::unique_ptr<Client> client(new Client());
+    std::unique_ptr<Client> client/*(new Client())*/;
     return std::move(client);
 }
 

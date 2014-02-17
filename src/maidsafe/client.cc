@@ -21,16 +21,18 @@
 
 namespace maidsafe {
 
-Client::Client()
-    : pimpl_(new detail::ClientImpl()) {}
+Client::Client(const passport::Maid& maid)
+    : pimpl_(new detail::ClientImpl(maid)) {}
+
+
+Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid)
+    : pimpl_(new detail::ClientImpl(maid, anmaid)) {}
 
 Client::~Client() {
-  SaveSession();
 }
 
-// NO THROW
-void Client::SaveSession() {
-  pimpl_->SaveSession();
+
+void Client::RegisterVault() {
 }
 
 Client::ImmutableDataFuture Client::Get(const ImmutableData::Name& immutable_data_name,
