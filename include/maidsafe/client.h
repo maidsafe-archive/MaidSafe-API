@@ -38,22 +38,25 @@ namespace detail {
   class ClientImpl;
 }
 
+typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
 class Client {
  public:
 
   typedef boost::future<ImmutableData> ImmutableDataFuture;
-  typedef boost::future<void> PutFuture;
+  typedef boost::future<void> PutFuture, CreateVersionFuture;
+  typedef boost::future<std::unique_ptr<StructuredDataVersions::VersionName>> PutVersionFuture;
   typedef boost::future<std::vector<StructuredDataVersions::VersionName>> VersionNamesFuture;
 
   typedef boost::signals2::signal<void (int32_t)> OnNetworkHealthChange;
   typedef boost::signals2::signal<void (const ImmutableData::Name&)> OnImmutableDataPutFailure;
 
   // For already existing accounts
-  Client(const passport::Maid& maid);
+  Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
 
   // For new accounts
   // throws on failure to create account
-  Client(const passport::Maid& maid, const passport::Anmaid& anmaid);
+  Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
+         const BootstrapInfo& bootstrap_info);
 
   // FIXME need to pass registration token here as pmid key might not be available to the client
   // Discuss
@@ -76,6 +79,7 @@ class Client {
 
 
   // structured data
+  CreateVersionFuture CreateVersionTree(); // FIXME
   VersionNamesFuture GetVersions(const MutableData::Name& mutable_data_name,
       const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
@@ -84,9 +88,9 @@ class Client {
                                const std::chrono::steady_clock::duration& timeout =
                                    std::chrono::seconds(10));
 
-  PutFuture PutVersion(const MutableData::Name& mutable_data_name,
-                       const StructuredDataVersions::VersionName& old_version_name,
-                       const StructuredDataVersions::VersionName& new_version_name);
+  PutVersionFuture PutVersion(const MutableData::Name& mutable_data_name,
+                              const StructuredDataVersions::VersionName& old_version_name,
+                              const StructuredDataVersions::VersionName& new_version_name);
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
