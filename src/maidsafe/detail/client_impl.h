@@ -36,9 +36,10 @@ class ClientImpl {
 
  public:
 
-  ClientImpl(const passport::Maid& maid);
+  ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
   // throws on failure to create account
-  ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid);
+  ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
+             const BootstrapInfo& bootstrap_info);
 
   Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
                                   const std::chrono::steady_clock::duration& timeout);
@@ -55,9 +56,9 @@ class ClientImpl {
                                        const StructuredDataVersions::VersionName& branch_tip,
                                        const std::chrono::steady_clock::duration& timeout);
 
-  Client::PutFuture PutVersion(const MutableData::Name& mutable_data_name,
-                               const StructuredDataVersions::VersionName& old_version_name,
-                               const StructuredDataVersions::VersionName& new_version_name);
+  Client::PutVersionFuture PutVersion(const MutableData::Name& mutable_data_name,
+                                      const StructuredDataVersions::VersionName& old_version_name,
+                                      const StructuredDataVersions::VersionName& new_version_name);
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);

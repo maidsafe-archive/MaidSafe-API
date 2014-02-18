@@ -22,5 +22,6 @@
 #include "maidsafe/api.h"
 #include "maidsafe/client.h"
 #include "maidsafe/encryptor.h"
+#include "maidsafe/session_handler.h"
 
 #endif  // MAIDSAFE_H_

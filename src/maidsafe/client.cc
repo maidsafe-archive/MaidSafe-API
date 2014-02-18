@@ -21,12 +21,13 @@
 
 namespace maidsafe {
 
-Client::Client(const passport::Maid& maid)
-    : pimpl_(new detail::ClientImpl(maid)) {}
+Client::Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info)
+    : pimpl_(new detail::ClientImpl(maid, bootstrap_info)) {}
 
 
-Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid)
-    : pimpl_(new detail::ClientImpl(maid, anmaid)) {}
+Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
+               const BootstrapInfo& bootstrap_info)
+    : pimpl_(new detail::ClientImpl(maid, anmaid, bootstrap_info)) {}
 
 Client::~Client() {
 }
@@ -61,9 +62,9 @@ Client::VersionNamesFuture Client::GetBranch(
   return pimpl_->GetBranch(mutable_data_name, branch_tip, timeout);
 }
 
-Client::PutFuture Client::PutVersion(const MutableData::Name& mutable_data_name,
-                                     const StructuredDataVersions::VersionName& old_version_name,
-                                     const StructuredDataVersions::VersionName& new_version_name) {
+Client::PutVersionFuture Client::PutVersion(const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& old_version_name,
+    const StructuredDataVersions::VersionName& new_version_name) {
   return pimpl_->PutVersion(mutable_data_name, old_version_name, new_version_name);
 }
 

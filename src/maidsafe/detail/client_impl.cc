@@ -24,16 +24,17 @@ namespace maidsafe {
 namespace detail {
 
 
-ClientImpl::ClientImpl(const passport::Maid &maid)
+ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& /*bootstrap_info*/)
     : asio_service_(2),
       routing_(new routing::Routing(maid)),
       maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {  // FIXME need pmid hint here
 // Start routing object
-// FIXME decide on how to get access to bootstrap endpoints
+// FIXME need to update routing to get bootstrap endpoints along with public keys
 
 }
 
-ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& /*anmaid*/)
+ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& /*anmaid*/,
+                       const BootstrapInfo& /*bootstrap_info*/)
     : asio_service_(2),
       routing_(new routing::Routing(maid)),
       maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {
@@ -66,10 +67,10 @@ Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& /*muta
   return Client::VersionNamesFuture();
 }
 
-Client::PutFuture ClientImpl::PutVersion(const MutableData::Name& /*mutable_data_name*/,
+Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& /*mutable_data_name*/,
     const StructuredDataVersions::VersionName& /*old_version_name*/,
     const StructuredDataVersions::VersionName& /*new_version_name*/) {
-  return Client::PutFuture();
+  return Client::PutVersionFuture();
 }
 
 void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& /*mutable_data_name*/,
