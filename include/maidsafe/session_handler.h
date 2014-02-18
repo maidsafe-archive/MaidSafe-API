@@ -25,7 +25,7 @@ namespace maidsafe {
 
 class UserCredentials;  // FIXME
 class AnonymousSession;  // FIXME
-
+class SessionGetter; // FIXME
 template <typename Session>
 class SessionHandler {
  public:
@@ -41,6 +41,7 @@ class SessionHandler {
 
  private :
   std::unique_ptr<typename Session> session_;
+  std::unique_ptr<SessionGetter> session_getter_;
   // versions of session
   UserCredentials user_credentials_;
 };
