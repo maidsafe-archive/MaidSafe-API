@@ -16,13 +16,13 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_H_
-#define MAIDSAFE_H_
+package maidsafe.protobuf;
 
-#include "maidsafe/api.h"
-#include "maidsafe/anonymous_session.h"
-#include "maidsafe/client.h"
-#include "maidsafe/encryptor.h"
-#include "maidsafe/session_handler.h"
-
-#endif  // MAIDSAFE_H_
+message AnonymousSession {
+  required bytes serialised_passport = 1;
+  required bytes timestamp = 2;
+  required bytes ip = 3;
+  required uint16 port = 4;
+  optional bytes unique_user_id = 5;
+  optional bytes root_parent_id = 6;
+}
