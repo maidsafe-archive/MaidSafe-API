@@ -36,6 +36,39 @@ set(ApiSourcesDir ${PROJECT_SOURCE_DIR}/src/maidsafe)
 ms_glob_dir(Api ${ApiSourcesDir} Api)
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "Api Detail")
 
+# Check convenience header is up to date
+file(STRINGS ${PROJECT_SOURCE_DIR}/include/maidsafe.h MaidSafeHeader REGEX "#include")
+foreach(IncludeLine ${MaidSafeHeader})
+  string(REGEX REPLACE "^#include[ ]*[\"<]([^\">]*)[\">]" "\\1" IncludeFile "${IncludeLine}")
+  if(NOT "${IncludeFile}" STREQUAL "${IncludeLine}")  # i.e. regex replace worked
+    list(APPEND Headers "${PROJECT_SOURCE_DIR}/include/${IncludeFile}")
+  endif()
+endforeach()
+list(SORT ApiApi)
+list(SORT Headers)
+if(NOT "${ApiApi}" STREQUAL "${Headers}")
+  set(ApiExtras "${ApiApi}")
+  list(REMOVE_ITEM ApiExtras ${Headers})
+  set(HeaderExtras "${Headers}")
+  list(REMOVE_ITEM HeaderExtras ${ApiApi})
+  set(Msg "\ninclude/maidsafe.h is not up to date.\n")
+  if(ApiExtras)
+    set(Msg "${Msg}It is missing #include statements for the following API files:\n")
+    foreach(ApiExtra ${ApiExtras})
+      string(REPLACE "${PROJECT_SOURCE_DIR}/" "" ApiExtra "${ApiExtra}")
+      set(Msg "${Msg}  ${ApiExtra}\n")
+    endforeach()
+  endif()
+  if(HeaderExtras)
+    set(Msg "${Msg}It has #include statements for the following non-existent API files:\n")
+    foreach(HeaderExtra ${HeaderExtras})
+      string(REPLACE "${PROJECT_SOURCE_DIR}/" "" HeaderExtra "${HeaderExtra}")
+      set(Msg "${Msg}  ${HeaderExtra}\n")
+    endforeach()
+  endif()
+  message(AUTHOR_WARNING "${Msg}")
+endif()
+
 # Tests
 set(TESTS_MAIN_CC ${ApiSourcesDir}/tests/tests_main.cc)
 source_group("Tests Source Files" FILES ${TESTS_MAIN_CC}
@@ -72,7 +105,7 @@ include(standard_flags)
 
 
 #==================================================================================================#
-# Export API Dependency paths for UI projects                                                   #
+# Export API Dependency paths for UI projects                                                      #
 #==================================================================================================#
 
 
