@@ -21,6 +21,8 @@
 
 #include "maidsafe/client.h"
 
+#include "maidsafe/detail/session_getter.h"
+
 namespace maidsafe {
 
 class UserCredentials;  // FIXME
@@ -43,7 +45,7 @@ class SessionHandler {
   std::unique_ptr<typename Session> session_;
   std::unique_ptr<SessionGetter> session_getter_;
   // versions of session
-  UserCredentials user_credentials_;
+  std::unique_ptr<UserCredentials> user_credentials_;
 };
 
 
@@ -52,7 +54,10 @@ class SessionHandler {
 
 // Joins with anonymous data getter
 template <typename Session>
-SessionHandler<Session>::SessionHandler(const BootstrapInfo& /*bootstrap_info*/) {
+SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
+    : session_(),
+      session_getter_(new SessionGetter(bootstrap_info)),
+      user_credentials_() {
 
 }
 

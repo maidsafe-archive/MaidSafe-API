@@ -16,13 +16,43 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-package maidsafe.protobuf;
+#ifndef MAIDSAFE_DETAIL_SESSION_GETTER_H_
+#define MAIDSAFE_DETAIL_SESSION_GETTER_H_
 
-message AnonymousSession {
-  required bytes serialised_passport = 1;
-  required bytes timestamp = 2;
-  required bytes ip = 3;
-  required int32 port = 4;  // FIXME Fraser
-  optional bytes unique_user_id = 5;
-  optional bytes root_parent_id = 6;
-}
+
+#include "maidsafe/routing/routing_api.h"
+
+#include "maidsafe/nfs/client/data_getter.h"
+
+namespace maidsafe {
+
+typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
+
+namespace detail {
+
+class SessionGetter {
+
+ public:
+
+  SessionGetter(const BootstrapInfo& bootstrap_info);
+
+ private:
+
+  void InitRouting(const BootstrapInfo& bootstrap_info);
+  routing::Functors InitialiseRoutingCallbacks();
+  void OnNetworkStatusChange(int network_health);
+  void DoOnNetworkStatusChange(int network_health);
+
+  AsioService asio_service_;
+  std::mutex network_health_mutex_;
+  std::condition_variable network_health_condition_variable_;
+  int network_health_;
+  routing::Routing routing_;
+  nfs_client::DataGetter data_getter_;
+};
+
+}  // namespace detail
+
+}  // namespace maidsafe
+
+#endif  // MAIDSAFE_DETAIL_SESSION_GETTER_H_
