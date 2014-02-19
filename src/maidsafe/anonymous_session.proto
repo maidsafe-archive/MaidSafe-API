@@ -22,7 +22,7 @@ message AnonymousSession {
   required bytes serialised_passport = 1;
   required bytes timestamp = 2;
   required bytes ip = 3;
-  required int32 port = 4;  // FIXME Fraser
+  required int32 port = 4;
   optional bytes unique_user_id = 5;
   optional bytes root_parent_id = 6;
 }
