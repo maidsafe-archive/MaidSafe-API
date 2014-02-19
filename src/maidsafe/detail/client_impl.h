@@ -24,7 +24,6 @@
 
 #include "maidsafe/routing/routing_api.h"
 
-#include "maidsafe/nfs/client/data_getter.h"
 #include "maidsafe/nfs/client/maid_node_nfs.h"
 
 
@@ -64,9 +63,19 @@ class ClientImpl {
                              const StructuredDataVersions::VersionName& branch_tip);
 
  private:
-  AsioService asio_service_;
-  std::unique_ptr<routing::Routing> routing_;
+
+  void InitRouting(const BootstrapInfo& bootstrap_info);
+  routing::Functors InitialiseRoutingCallbacks();
+  void OnNetworkStatusChange(int network_health);
+  void DoOnNetworkStatusChange(int network_health);
+
+  std::mutex network_health_mutex_;
+  std::condition_variable network_health_condition_variable_;
+  int network_health_;
+  routing::Routing routing_;
   std::unique_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
+  nfs::detail::PublicPmidHelper public_pmid_helper_;
+  AsioService asio_service_;
 };
 
 }  // namespace detail

@@ -24,58 +24,116 @@ namespace maidsafe {
 namespace detail {
 
 
-ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& /*bootstrap_info*/)
-    : asio_service_(2),
-      routing_(new routing::Routing(maid)),
-      maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {  // FIXME need pmid hint here
-// Start routing object
-// FIXME need to update routing to get bootstrap endpoints along with public keys
-
+ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info)
+    : network_health_mutex_(),
+      network_health_condition_variable_(),
+      network_health_(-1),
+      routing_(maid),
+      maid_node_nfs_(),  // deferred construction until asio service is created
+      public_pmid_helper_(),
+      asio_service_(2) {
+  passport::PublicPmid::Name pmid_name;  // FIXME
+  maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
+  InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
 }
 
-ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& /*anmaid*/,
-                       const BootstrapInfo& /*bootstrap_info*/)
-    : asio_service_(2),
-      routing_(new routing::Routing(maid)),
-      maid_node_nfs_(/*asio_service_, *routing_, passport::PublicPmid::Name()*/) {
-// Call create account
-// throw on failure to create account
+ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
+                       const BootstrapInfo& bootstrap_info)
+    : network_health_mutex_(),
+      network_health_condition_variable_(),
+      network_health_(-1),
+      routing_(maid),
+      maid_node_nfs_(),  // deferred construction until asio service is created
+      public_pmid_helper_(),
+      asio_service_(2) {
+  passport::PublicPmid::Name pmid_name;  // FIXME to be filled in by vault registration
+  maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
+  InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  passport::PublicMaid public_maid(maid);
+  passport::PublicAnmaid public_anmaid(anmaid);
+  nfs_vault::AccountCreation account_creation(public_maid, public_anmaid);
+  auto create_account_future = maid_node_nfs_->CreateAccount(account_creation);
+  create_account_future.get();
 }
 
-Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& /*immutable_data_name*/,
-  const std::chrono::steady_clock::duration& /*timeout*/) {
-  return Client::ImmutableDataFuture();
+void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
+  routing::Functors functors(InitialiseRoutingCallbacks());
+  // BEFORE_RELEASE temp work around, need to update routing to take bootstrap_info
+  std::vector<boost::asio::ip::udp::endpoint> peer_endpoints;
+  for (const auto& i : bootstrap_info)
+    peer_endpoints.push_back(i.first);
+  routing_.Join(functors, peer_endpoints);
+  std::unique_lock<std::mutex> lock(network_health_mutex_);
+  // FIXME BEFORE_RELEASE discuss this
+  // This should behave differently. In case of new maid account, it should timeout
+  // For existing clients, should we try infinitly ?
+
+#ifdef TESTING
+  if (!network_health_condition_variable_.wait_for(lock, std::chrono::minutes(5), [this] {
+         return network_health_ >= 100;  // FIXME need parameter here ?
+       }))
+    BOOST_THROW_EXCEPTION(MakeError(VaultErrors::failed_to_join_network));
+#else
+  network_health_condition_variable_.wait(
+      lock, [this] { return network_health_ >= 100; });
+#endif
 }
 
-Client::PutFuture ClientImpl::Put(const ImmutableData& /*immutable_data*/,
+routing::Functors ClientImpl::InitialiseRoutingCallbacks() {
+  routing::Functors functors;
+  functors.typed_message_and_caching.single_to_single.message_received = [this](
+      const routing::SingleToSingleMessage& message) { maid_node_nfs_->HandleMessage(message); };  // NOLINT
+  functors.typed_message_and_caching.group_to_single.message_received = [this](
+      const routing::GroupToSingleMessage& message) { maid_node_nfs_->HandleMessage(message); };  // NOLINT
+
+  functors.network_status = [this](const int&
+                                   network_health) { OnNetworkStatusChange(network_health); };  // NOLINT
+  functors.matrix_changed = [this](std::shared_ptr<routing::MatrixChange> /*matrix_change*/) {};
+  functors.request_public_key = [this](const NodeId& node_id,
+                                       const routing::GivePublicKeyFunctor& give_key) {
+      auto future_key(maid_node_nfs_->Get(passport::PublicPmid::Name(Identity(node_id.string())),
+                                        std::chrono::seconds(10)));
+      public_pmid_helper_.AddEntry(std::move(future_key), give_key);
+  };
+  return functors;
+}
+
+Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& immutable_data_name,
+  const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->Get(immutable_data_name, timeout);
+}
+
+Client::PutFuture ClientImpl::Put(const ImmutableData& immutable_data,
                                   const std::chrono::steady_clock::duration& /*timeout*/) {
-  return Client::PutFuture();
+  maid_node_nfs_->Put(immutable_data);
+  return Client::PutFuture();  // FIXME Need to return future from maid_node_nfs_->Put()
 }
 
-void ClientImpl::Delete(const ImmutableData::Name& /*immutable_data_name*/) {
-
+void ClientImpl::Delete(const ImmutableData::Name& immutable_data_name) {
+  maid_node_nfs_->Delete(immutable_data_name);
 }
 
-Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& /*mutable_data_name*/,
-    const std::chrono::steady_clock::duration& /*timeout*/) {
-  return Client::VersionNamesFuture();
+Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& mutable_data_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->GetVersions(mutable_data_name, timeout);
 }
 
-Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& /*mutable_data_name*/,
-    const StructuredDataVersions::VersionName& /*branch_tip*/,
-    const std::chrono::steady_clock::duration& /*timeout*/) {
-  return Client::VersionNamesFuture();
+Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& branch_tip,
+    const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->GetBranch(mutable_data_name, branch_tip, timeout);
 }
 
-Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& /*mutable_data_name*/,
-    const StructuredDataVersions::VersionName& /*old_version_name*/,
-    const StructuredDataVersions::VersionName& /*new_version_name*/) {
-  return Client::PutVersionFuture();
+Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& old_version_name,
+    const StructuredDataVersions::VersionName& new_version_name) {
+  maid_node_nfs_->PutVersion(mutable_data_name, old_version_name, new_version_name);
+  return Client::PutVersionFuture(); // FIXME need to return a future from maid_node_nfs_->PutVersion()
 }
 
-void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& /*mutable_data_name*/,
-                                       const StructuredDataVersions::VersionName& /*branch_tip*/) {
-
+void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
+                                       const StructuredDataVersions::VersionName& branch_tip) {
+  return maid_node_nfs_->DeleteBranchUntilFork(mutable_data_name, branch_tip);
 }
 
 }  // namespace detail

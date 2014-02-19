@@ -35,6 +35,7 @@ class SessionGetter {
  public:
 
   SessionGetter(const BootstrapInfo& bootstrap_info);
+  nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
  private:
 
@@ -43,12 +44,13 @@ class SessionGetter {
   void OnNetworkStatusChange(int network_health);
   void DoOnNetworkStatusChange(int network_health);
 
-  AsioService asio_service_;
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;
   int network_health_;
   routing::Routing routing_;
-  nfs_client::DataGetter data_getter_;
+  std::unique_ptr<nfs_client::DataGetter> data_getter_;
+  nfs::detail::PublicPmidHelper public_pmid_helper_;
+  AsioService asio_service_;
 };
 
 }  // namespace detail
