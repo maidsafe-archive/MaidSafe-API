@@ -26,18 +26,17 @@
 namespace maidsafe {
 
 class UserCredentials;  // FIXME
-class AnonymousSession;  // FIXME
-class SessionGetter; // FIXME
+
 template <typename Session>
 class SessionHandler {
  public:
-
+  // Used when logging in to existing account
   explicit SessionHandler(const BootstrapInfo& bootstrap_info);
   // Used for creating new account
   // throws if account can't be created on network
-  SessionHandler(const Session& session, Client& client);
-
-  void Login(UserCredentials);
+  SessionHandler(const Session& session, Client& client, UserCredentials&& user_credentials);
+  // No need to login for new accounts
+  void Login(UserCredentials&& user_credentials);
   // Saves session on the network using client
   void Save(Client& client);
 
@@ -45,7 +44,7 @@ class SessionHandler {
   std::unique_ptr<typename Session> session_;
   std::unique_ptr<SessionGetter> session_getter_;
   // versions of session
-  std::unique_ptr<UserCredentials> user_credentials_;
+  UserCredentials user_credentials_;
 };
 
 
@@ -57,21 +56,28 @@ template <typename Session>
 SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
     : session_(),
       session_getter_(new SessionGetter(bootstrap_info)),
-      user_credentials_() {
-
-}
+      user_credentials_() {}
 
 // throws if failed to create maid account
-// Save session after creating account
+// Internally saves session after creating user account
 // throws if failed to save session
 template <typename Session>
-SessionHandler<Session>::SessionHandler(const Session& /*session*/, Client& /*client*/) {
+SessionHandler<Session>::SessionHandler(const Session& session, Client& /*client*/,
+                                        UserCredentials&& user_credentials)
+    : session_(new Session(session)),
+      session_getter_(), // Not reqired when creating account.
+      user_credentials_(std::move(user_credentials)) {
+
 }
 
 // throw if session is already exist
 // this method should not be called when creating account with session handle construct
 template <typename Session>
-void SessionHandler<Session>::Login(const UserCredentials& /*user_credentials*/) {
+void SessionHandler<Session>::Login(UserCredentials&& /*user_credentials*/) {
+  // throw (session_ !- nullptr);
+
+
+  // destroy session getter if success
 }
 
 template <typename Session>

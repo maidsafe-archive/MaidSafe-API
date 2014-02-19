@@ -47,12 +47,12 @@ void SessionGetter::InitRouting(const BootstrapInfo& bootstrap_info) {
   std::unique_lock<std::mutex> lock(network_health_mutex_);
 #ifdef TESTING
   if (!network_health_condition_variable_.wait_for(lock, std::chrono::minutes(5), [this] {
-         return network_health_ >= 100;  // FIXME need parameter here ?
+         return network_health_ == 100;  // FIXME need parameter here ?
        }))
     BOOST_THROW_EXCEPTION(MakeError(VaultErrors::failed_to_join_network));
 #else
   network_health_condition_variable_.wait(
-      lock, [this] { return network_health_ >= 100; });
+      lock, [this] { return network_health_ == 100; });
 #endif
 }
 
