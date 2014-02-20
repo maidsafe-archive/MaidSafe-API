@@ -20,7 +20,6 @@
 
 #include "maidsafe/common/log.h"
 #include "maidsafe/common/test.h"
-//#include "maidsafe/common/utils.h"
 
 namespace maidsafe {
 

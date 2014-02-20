@@ -19,12 +19,14 @@
 #ifndef MAIDSAFE_ANONYMOUS_SESSION_H_
 #define MAIDSAFE_ANONYMOUS_SESSION_H_
 
-#include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "boost/asio/ip/address.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
+#include "maidsafe/common/config.h"
 #include "maidsafe/common/tagged_value.h"
 #include "maidsafe/common/types.h"
 #include "maidsafe/passport/passport.h"
@@ -33,26 +35,35 @@ namespace maidsafe {
 
 struct AnonymousSession {
   // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
-  typedef TaggedValue<struct AnonymousSessiontag, std::string> SerialisedType;
+  typedef TaggedValue<std::string, struct AnonymousSessiontag> SerialisedType;
 
-  // Used when creating a new user account.  Creates a new default-constructed passport  Throws on
+  // Used when creating a new user account.  Creates a new default-constructed passport.  Throws on
   // error.
   AnonymousSession();
 
   // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
   explicit AnonymousSession(SerialisedType serialised_session);
 
+  // Move-constructible and move-assignable only
+  AnonymousSession(AnonymousSession&& other);
+  AnonymousSession& operator=(AnonymousSession other);
+
   // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
   // struct.  Throws on error.
   SerialisedType Serialise();
 
-  passport::Passport passport;
-  std::chrono::system_clock::time_point timestamp;
+  std::unique_ptr<passport::Passport> passport;
+  boost::posix_time::ptime timestamp;
   boost::asio::ip::address ip;
   uint16_t port;
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
+
+ private:
+  AnonymousSession(const AnonymousSession&) MAIDSAFE_DELETE;
 };
+
+void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;
 
 }  // namespace maidsafe
 

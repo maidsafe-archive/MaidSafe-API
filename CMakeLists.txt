@@ -24,6 +24,13 @@
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake_modules/standard_setup.cmake")
+  cmake_minimum_required(VERSION 2.8)  # To suppress warning cluttering error message
+  set(Msg "\nThis project can currently only be build as part of the MaidSafe super-project.  For")
+  set(Msg "${Msg} full details, see https://github.com/maidsafe/MaidSafe/wiki/Build-Instructions\n")
+  message(FATAL_ERROR "${Msg}")
+endif()
+
 project(api)
 
 include(../../cmake_modules/standard_setup.cmake)
@@ -33,9 +40,11 @@ include(../../cmake_modules/standard_setup.cmake)
 # Set up all files as GLOBs                                                                        #
 #==================================================================================================#
 set(ApiSourcesDir ${PROJECT_SOURCE_DIR}/src/maidsafe)
-ms_glob_dir(Api ${ApiSourcesDir} Api)
-ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "Api Tests")
-ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "Api Detail")
+ms_glob_dir(Api ${ApiSourcesDir} "API")
+source_group("API Public Files" FILES ${ApiApi})
+ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
+source_group("API Detail Public Files" FILES ${ApiDetailApi})
+ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
 
 # Check convenience header is up to date
 file(STRINGS ${PROJECT_SOURCE_DIR}/include/maidsafe.h MaidSafeHeader REGEX "#include")
@@ -70,28 +79,16 @@ if(NOT "${ApiApi}" STREQUAL "${Headers}")
   message(AUTHOR_WARNING "${Msg}")
 endif()
 
-# Tests
-set(TESTS_MAIN_CC ${ApiSourcesDir}/tests/tests_main.cc)
-set(ApiGTestsAllFiles ${ApiTestsAllFiles})
-source_group("Tests Source Files" FILES ${TESTS_MAIN_CC}
-               ${ApiSourcesDir}/tests/client_test.cc
-               ${ApiSourcesDir}/tests/session_getter_test.cc
-               ${ApiSourcesDir}/tests/session_handler_test.cc
-               ${ApiSourcesDir}/tests/anonymous_session_test.cc
-               # Append more test files here
-            )
+
 #==================================================================================================#
 # Define MaidSafe libraries and executables                                                        #
 #==================================================================================================#
-ms_add_static_library(maidsafe_api_detail ${ApiDetailAllFiles})
-ms_add_static_library(maidsafe_api ${ApiAllFiles})
-target_include_directories(maidsafe_api_detail PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
+ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles})
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(maidsafe_api_detail maidsafe_drive maidsafe_nfs_client maidsafe_nfs_vault ${BoostRegexLibs})
-target_link_libraries(maidsafe_api maidsafe_api_detail maidsafe_vault)
+target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
 
 if(MaidsafeTesting)
-  ms_add_executable(TESTapi "Tests/Api" ${ApiGTestsAllFiles})
+  ms_add_executable(TESTapi "Tests/API" ${ApiTestsAllFiles})
   target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(TESTapi maidsafe_api)
 endif()
@@ -102,6 +99,7 @@ ms_rename_outdated_built_exes()
 #==================================================================================================#
 # Export detail                                                                                    #
 #==================================================================================================#
+
 
 #==================================================================================================#
 # Set compiler and linker flags                                                                    #
