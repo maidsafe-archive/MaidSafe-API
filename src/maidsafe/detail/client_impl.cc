@@ -28,7 +28,8 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
-      routing_(maid),
+      maid_(maid),
+      routing_(maid_),
       maid_node_nfs_(),  // deferred construction until asio service is created
       public_pmid_helper_(),
       asio_service_(2) {
@@ -42,7 +43,8 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
-      routing_(maid),
+      maid_(maid),
+      routing_(maid_),
       maid_node_nfs_(),  // deferred construction until asio service is created
       public_pmid_helper_(),
       asio_service_(2) {
@@ -54,6 +56,53 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
   nfs_vault::AccountCreation account_creation(public_maid, public_anmaid);
   auto create_account_future = maid_node_nfs_->CreateAccount(account_creation);
   create_account_future.get();
+}
+
+void ClientImpl::RegisterVault(const passport::Pmid& pmid) {
+  nfs_vault::PmidRegistration pmid_registration(maid_, pmid, false);
+  maid_node_nfs_->RegisterPmid(pmid_registration);
+}
+
+void ClientImpl::UnregisterVault(const passport::PublicPmid::Name& pmid_name) {
+  maid_node_nfs_->UnregisterPmid(pmid_name);
+}
+
+Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& immutable_data_name,
+  const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->Get(immutable_data_name, timeout);
+}
+
+Client::PutFuture ClientImpl::Put(const ImmutableData& immutable_data,
+                                  const std::chrono::steady_clock::duration& /*timeout*/) {
+  maid_node_nfs_->Put(immutable_data);
+  return Client::PutFuture();  // FIXME Need to return future from maid_node_nfs_->Put()
+}
+
+void ClientImpl::Delete(const ImmutableData::Name& immutable_data_name) {
+  maid_node_nfs_->Delete(immutable_data_name);
+}
+
+Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& mutable_data_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->GetVersions(mutable_data_name, timeout);
+}
+
+Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& branch_tip,
+    const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->GetBranch(mutable_data_name, branch_tip, timeout);
+}
+
+Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& old_version_name,
+    const StructuredDataVersions::VersionName& new_version_name) {
+  maid_node_nfs_->PutVersion(mutable_data_name, old_version_name, new_version_name);
+  return Client::PutVersionFuture(); // FIXME need to return a future from maid_node_nfs_->PutVersion()
+}
+
+void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
+                                       const StructuredDataVersions::VersionName& branch_tip) {
+  return maid_node_nfs_->DeleteBranchUntilFork(mutable_data_name, branch_tip);
 }
 
 void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
@@ -95,45 +144,49 @@ routing::Functors ClientImpl::InitialiseRoutingCallbacks() {
                                         std::chrono::seconds(10)));
       public_pmid_helper_.AddEntry(std::move(future_key), give_key);
   };
+
+  // FIXME in routing remove asserts forcing clients to provide all functors
+
+  // Unused  TODO move to utility function (fix routing asserts for clients)
+  functors.typed_message_and_caching.single_to_group.message_received = [this](
+      const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_group.message_received = [this](
+     const routing::GroupToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.single_to_group_relay.message_received = [this](
+      const routing::SingleToGroupRelayMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.single_to_group.put_cache_data = [this](
+      const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_single.put_cache_data = [this](
+      const routing::GroupToSingleMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_group.put_cache_data = [this](
+      const routing::GroupToGroupMessage& /*message*/) {};  // NOLINT
+  functors.new_bootstrap_endpoint = [this](
+     const boost::asio::ip::udp::endpoint& /*endpoint*/) {};  // NOLINT
   return functors;
 }
 
-Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& immutable_data_name,
-  const std::chrono::steady_clock::duration& timeout) {
-  return maid_node_nfs_->Get(immutable_data_name, timeout);
+void ClientImpl::OnNetworkStatusChange(int network_health) {
+  asio_service_.service().post([=] { DoOnNetworkStatusChange(network_health); });
 }
 
-Client::PutFuture ClientImpl::Put(const ImmutableData& immutable_data,
-                                  const std::chrono::steady_clock::duration& /*timeout*/) {
-  maid_node_nfs_->Put(immutable_data);
-  return Client::PutFuture();  // FIXME Need to return future from maid_node_nfs_->Put()
-}
+void ClientImpl::DoOnNetworkStatusChange(int network_health) {
+  if (network_health >= 0) {
+    if (network_health >= network_health_)
+      LOG(kVerbose) << "Init - " << DebugId(routing_.kNodeId()) << " - Network health is "
+                    << network_health << "% (was " << network_health_ << "%)";
+    else
+      LOG(kWarning) << "Init - " << DebugId(routing_.kNodeId()) << " - Network health is "
+                    << network_health << "% (was " << network_health_ << "%)";
+  } else {
+    LOG(kWarning) << "Init - " << DebugId(routing_.kNodeId()) << " - Network is down ("
+                  << network_health << ")";
+  }
 
-void ClientImpl::Delete(const ImmutableData::Name& immutable_data_name) {
-  maid_node_nfs_->Delete(immutable_data_name);
-}
-
-Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& mutable_data_name,
-    const std::chrono::steady_clock::duration& timeout) {
-  return maid_node_nfs_->GetVersions(mutable_data_name, timeout);
-}
-
-Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& mutable_data_name,
-    const StructuredDataVersions::VersionName& branch_tip,
-    const std::chrono::steady_clock::duration& timeout) {
-  return maid_node_nfs_->GetBranch(mutable_data_name, branch_tip, timeout);
-}
-
-Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& mutable_data_name,
-    const StructuredDataVersions::VersionName& old_version_name,
-    const StructuredDataVersions::VersionName& new_version_name) {
-  maid_node_nfs_->PutVersion(mutable_data_name, old_version_name, new_version_name);
-  return Client::PutVersionFuture(); // FIXME need to return a future from maid_node_nfs_->PutVersion()
-}
-
-void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
-                                       const StructuredDataVersions::VersionName& branch_tip) {
-  return maid_node_nfs_->DeleteBranchUntilFork(mutable_data_name, branch_tip);
+  {
+    std::lock_guard<std::mutex> lock(network_health_mutex_);
+    network_health_ = network_health;
+  }
+  network_health_condition_variable_.notify_one();
 }
 
 }  // namespace detail

@@ -32,10 +32,16 @@ Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
 Client::~Client() {
 }
 
-
-void Client::RegisterVault() {
+//========================== Vault Management ======================================================
+void Client::RegisterVault(const passport::Pmid& pmid) {
+  pimpl_->RegisterVault(pmid);
 }
 
+void Client::UnregisterVault(const passport::PublicPmid::Name& pmid_name) {
+  pimpl_->UnregisterVault(pmid_name);
+}
+
+//========================== Data accessors and mutators ===========================================
 Client::ImmutableDataFuture Client::Get(const ImmutableData::Name& immutable_data_name,
   const std::chrono::steady_clock::duration& timeout) {
   return pimpl_->Get(immutable_data_name, timeout);

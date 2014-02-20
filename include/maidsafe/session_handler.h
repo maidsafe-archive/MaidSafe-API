@@ -51,13 +51,15 @@ class SessionHandler {
 
 //================== Implementation ================================================================
 
-// Joins with anonymous data getter
+// Joins with anonymous data getter for getting session data from network
+// Used for already existing accounts
 template <typename Session>
 SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
     : session_(),
       session_getter_(new SessionGetter(bootstrap_info)),
       user_credentials_() {}
 
+// Used when creating new account
 // throws if failed to create maid account
 // Internally saves session after creating user account
 // throws if failed to save session

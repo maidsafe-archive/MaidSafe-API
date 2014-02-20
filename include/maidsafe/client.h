@@ -59,15 +59,17 @@ class Client {
          const BootstrapInfo& bootstrap_info);
 
   // FIXME need to pass registration token here as pmid key might not be available to the client
-  // Discuss
-  void RegisterVault();
+  // Discuss size parameter ??
+  void RegisterVault(const passport::Pmid& pmid);
+
+  // FIXME size ??
+  void UnregisterVault(const passport::PublicPmid::Name& pmid_name);
 
   ~Client();
 //=========================== Signals ==============================================================
 
 
-//=========================== Data access methods ==================================================
-
+//========================== Data accessors and mutators ===========================================
   // immutable data
   ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
     const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));

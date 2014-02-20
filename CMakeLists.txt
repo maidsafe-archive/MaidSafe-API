@@ -34,6 +34,7 @@ include(../../cmake_modules/standard_setup.cmake)
 #==================================================================================================#
 set(ApiSourcesDir ${PROJECT_SOURCE_DIR}/src/maidsafe)
 ms_glob_dir(Api ${ApiSourcesDir} Api)
+ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "Api Tests")
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "Api Detail")
 
 # Check convenience header is up to date
@@ -71,10 +72,14 @@ endif()
 
 # Tests
 set(TESTS_MAIN_CC ${ApiSourcesDir}/tests/tests_main.cc)
+set(ApiGTestsAllFiles ${ApiTestsAllFiles})
 source_group("Tests Source Files" FILES ${TESTS_MAIN_CC}
-            # Append more test files here
+               ${ApiSourcesDir}/tests/client_test.cc
+               ${ApiSourcesDir}/tests/session_getter_test.cc
+               ${ApiSourcesDir}/tests/session_handler_test.cc
+               ${ApiSourcesDir}/tests/anonymous_session_test.cc
+               # Append more test files here
             )
-
 #==================================================================================================#
 # Define MaidSafe libraries and executables                                                        #
 #==================================================================================================#
@@ -86,7 +91,7 @@ target_link_libraries(maidsafe_api_detail maidsafe_drive maidsafe_nfs_client mai
 target_link_libraries(maidsafe_api maidsafe_api_detail maidsafe_vault)
 
 if(MaidsafeTesting)
-  ms_add_executable(TESTapi "Tests/Api" ${TESTS_MAIN_CC})
+  ms_add_executable(TESTapi "Tests/Api" ${ApiGTestsAllFiles})
   target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(TESTapi maidsafe_api)
 endif()

@@ -40,6 +40,10 @@ class ClientImpl {
   ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
              const BootstrapInfo& bootstrap_info);
 
+  void RegisterVault(const passport::Pmid& pmid);
+
+  void UnregisterVault(const passport::PublicPmid::Name& pmid_name);
+
   Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
                                   const std::chrono::steady_clock::duration& timeout);
 
@@ -72,6 +76,7 @@ class ClientImpl {
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;
   int network_health_;
+  passport::Maid maid_;
   routing::Routing routing_;
   std::unique_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
   nfs::detail::PublicPmidHelper public_pmid_helper_;
