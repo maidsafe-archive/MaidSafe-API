@@ -16,12 +16,30 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#include "maidsafe/detail/session_getter.h"
+
+#include "maidsafe/common/test.h"
+
+#include "maidsafe/routing/parameters.h"
+
 namespace maidsafe {
+
+namespace detail {
 
 namespace test {
 
+// Pre-condition : Need a Vault network running
 
+TEST(SessionGetterTest, BEH_Constructor) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  BootstrapInfo bootstrap_info;
+  {
+     SessionGetter session_getter(bootstrap_info);
+  }
+}
 
 }  // namespace test
+
+}
 
 }  // namespace maidsafe

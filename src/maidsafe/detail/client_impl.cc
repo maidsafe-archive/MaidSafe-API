@@ -35,7 +35,9 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
+  std::cout << "calling InitRouting" << std::endl;
   InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  std::cout << "InitRouting  Done" << std::endl;
 }
 
 ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
@@ -50,15 +52,26 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME to be filled in by vault registration
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
+  std::cout << "calling InitRouting" << std::endl;
   InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  std::cout << "InitRouting  Done" << std::endl;
   passport::PublicMaid public_maid(maid);
   passport::PublicAnmaid public_anmaid(anmaid);
+  std::cout << "Calling   CreateAccount " << std::endl;
   nfs_vault::AccountCreation account_creation(public_maid, public_anmaid);
   auto create_account_future = maid_node_nfs_->CreateAccount(account_creation);
+  std::cout << "waiting on create_account_future.get() " << std::endl;
   create_account_future.get();
+  std::cout << "Done on create_account_future.get() " << std::endl;
 }
 
 void ClientImpl::RegisterVault(const passport::Pmid& pmid) {
+  passport::PublicPmid public_pmid(pmid);
+  /*auto put_future =*/ maid_node_nfs_->Put(public_pmid);
+   // BEFORE_RELEASE this should be removed once Put future is implemented in Nfs/Vault
+  std::cout << " sleeping for Put to complete " << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+  // put_future.get();
   nfs_vault::PmidRegistration pmid_registration(maid_, pmid, false);
   maid_node_nfs_->RegisterPmid(pmid_registration);
 }
@@ -111,7 +124,9 @@ void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
   std::vector<boost::asio::ip::udp::endpoint> peer_endpoints;
   for (const auto& i : bootstrap_info)
     peer_endpoints.push_back(i.first);
+  std::cout << "Before Routing Join";
   routing_.Join(functors, peer_endpoints);
+  std::cout << "After Routing Join";
   std::unique_lock<std::mutex> lock(network_health_mutex_);
   // FIXME BEFORE_RELEASE discuss this
   // This should behave differently. In case of new maid account, it should timeout

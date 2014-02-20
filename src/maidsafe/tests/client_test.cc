@@ -18,30 +18,30 @@
 
 #include "maidsafe/client.h"
 
-#include "maidsafe/common/log.h"
 #include "maidsafe/common/test.h"
+#include "maidsafe/routing/parameters.h"
 
 namespace maidsafe {
 
 namespace test {
 
-passport::Maid MakeMaid() {
-  passport::Anmaid anmaid;
-  return passport::Maid(anmaid);
-}
 
-passport::Pmid MakePmid() {
-  return passport::Pmid(MakeMaid());
-}
-
+// Pre-condition : Need a Vault network running
 TEST(ClientTest, BEH_Constructor) {
+  routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   passport::Anmaid anmaid;
   passport::Maid maid(anmaid);
-
-  Client client_new_account(maid, anmaid, bootstrap_info);
-
-  //Client client_existing_account(maid, bootstrap_info);
+  passport::Pmid pmid(maid);
+  {
+    Client client_new_account(maid, anmaid, bootstrap_info);
+  }
+  std::cout << "joining existing account" << std::endl;
+  Client client_existing_account(maid, bootstrap_info);
+  std::cout << " RegisterVault " << std::endl;
+  client_existing_account.RegisterVault(pmid);
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+  // need to start a Vault now to Put
 }
 
 }  // namespace test
