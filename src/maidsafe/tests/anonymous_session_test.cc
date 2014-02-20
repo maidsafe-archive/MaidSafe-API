@@ -16,11 +16,17 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#include "maidsafe/anonymous_session.h"
+
+#include "maidsafe/common/test.h"
+
 namespace maidsafe {
 
 namespace test {
 
-
+TEST(AnonymousSessionTest, BEH_Create) {
+  EXPECT_NO_THROW(AnonymousSession session);
+}
 
 }  // namespace test
 
