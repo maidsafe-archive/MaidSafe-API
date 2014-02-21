@@ -162,7 +162,6 @@ routing::Functors ClientImpl::InitialiseRoutingCallbacks() {
 
   // FIXME in routing remove asserts forcing clients to provide all functors
 
-  // Unused  TODO move to utility function (fix routing asserts for clients)
   functors.typed_message_and_caching.single_to_group.message_received = [this](
       const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
   functors.typed_message_and_caching.group_to_group.message_received = [this](

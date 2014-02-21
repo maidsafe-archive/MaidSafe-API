@@ -71,7 +71,25 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
       public_pmid_helper_.AddEntry(std::move(future_key), give_key);
   };
 
+  functors.typed_message_and_caching.single_to_single.message_received = [this](
+      const routing::SingleToSingleMessage& /*message*/) {};  // NOLINT
+
 // TODO fix routing asserts for clients so client need not to provide callbacks for all functors
+  functors.typed_message_and_caching.single_to_group.message_received = [this](
+      const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_group.message_received = [this](
+     const routing::GroupToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.single_to_group_relay.message_received = [this](
+      const routing::SingleToGroupRelayMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.single_to_group.put_cache_data = [this](
+      const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_single.put_cache_data = [this](
+      const routing::GroupToSingleMessage& /*message*/) {};  // NOLINT
+  functors.typed_message_and_caching.group_to_group.put_cache_data = [this](
+      const routing::GroupToGroupMessage& /*message*/) {};  // NOLINT
+  functors.new_bootstrap_endpoint = [this](
+     const boost::asio::ip::udp::endpoint& /*endpoint*/) {};  // NOLINT
+
   return functors;
 }
 
