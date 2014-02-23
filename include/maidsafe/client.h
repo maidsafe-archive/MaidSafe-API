@@ -22,9 +22,9 @@
 #include "boost/signals2/signal.hpp"
 #include "boost/thread/future.hpp"
 
-#include "maidsafe/data_types/immutable_data.h"
-#include "maidsafe/data_types/mutable_data.h"
-#include "maidsafe/data_types/structured_data_versions.h"
+#include "maidsafe/common/data_types/immutable_data.h"
+#include "maidsafe/common/data_types/mutable_data.h"
+#include "maidsafe/common/data_types/structured_data_versions.h"
 
 #include "maidsafe/passport/types.h"
 
