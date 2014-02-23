@@ -40,7 +40,7 @@ class SessionHandler {
   // Saves session on the network using client
   void Save(Client& client);
 
- private :
+ private:
   std::unique_ptr<typename Session> session_;
   std::unique_ptr<SessionGetter> session_getter_;
   // versions of session
