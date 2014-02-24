@@ -24,7 +24,7 @@
 #include <string>
 
 #include "boost/asio/ip/address.hpp"
-#include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/date_time/posix_time/ptime.hpp"
 
 #include "maidsafe/common/config.h"
 #include "maidsafe/common/tagged_value.h"

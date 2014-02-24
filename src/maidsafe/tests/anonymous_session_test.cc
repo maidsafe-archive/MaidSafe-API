@@ -18,14 +18,107 @@
 
 #include "maidsafe/anonymous_session.h"
 
+#include <memory>
+
 #include "maidsafe/common/test.h"
+#include "maidsafe/common/utils.h"
 
 namespace maidsafe {
 
 namespace test {
 
+// Tests default constructor, which is intended to be used when creating a new account.
 TEST(AnonymousSessionTest, BEH_Create) {
-  EXPECT_NO_THROW(AnonymousSession session);
+  std::unique_ptr<AnonymousSession> session;
+  // Default construct AnonymousSession
+  EXPECT_NO_THROW(session.reset(new AnonymousSession));
+
+  // Check session contents have been initialised as expected
+  EXPECT_NO_THROW(session->passport->Serialise());
+  EXPECT_EQ(boost::posix_time::ptime(boost::date_time::not_a_date_time), session->timestamp);
+  EXPECT_TRUE(session->ip.is_unspecified());
+  EXPECT_EQ(0, session->port);
+  EXPECT_FALSE(session->unique_user_id.IsInitialised());
+  EXPECT_FALSE(session->root_parent_id.IsInitialised());
+}
+
+// Tests serialising function and parsing constructor.
+TEST(AnonymousSessionTest, BEH_SaveAndLogin) {
+  AnonymousSession session0;
+  AnonymousSession::SerialisedType serialised_session0;
+
+  // Check we can handle serialising a default-contructed session.
+  EXPECT_NO_THROW(serialised_session0 = session0.Serialise());
+  EXPECT_NE(boost::posix_time::ptime(boost::date_time::not_a_date_time), session0.timestamp);
+
+  // Parse default-constructed session and update it.
+  std::unique_ptr<AnonymousSession> session1;
+  EXPECT_NO_THROW(session1.reset(new AnonymousSession(serialised_session0)));
+  EXPECT_EQ(session0.passport->Serialise(), session1->passport->Serialise());
+  EXPECT_EQ(session0.timestamp, session1->timestamp);
+  EXPECT_EQ(session0.ip, session1->ip);
+  EXPECT_EQ(session0.port, session1->port);
+  EXPECT_EQ(session0.unique_user_id, session1->unique_user_id);
+  EXPECT_EQ(session0.root_parent_id, session1->root_parent_id);
+
+  const boost::asio::ip::address ip(boost::asio::ip::address::from_string("123.124.125.126"));
+  const uint16_t port(static_cast<uint16_t>(RandomUint32()));
+  const Identity unique_user_id(RandomString(64));
+  const Identity root_parent_id(RandomString(64));
+  session1->ip = ip;
+  session1->port = port;
+  session1->unique_user_id = unique_user_id;
+  session1->root_parent_id = root_parent_id;
+
+  // Serialise updated session, then parse and check.
+  AnonymousSession::SerialisedType serialised_session1;
+  EXPECT_NO_THROW(serialised_session1 = session1->Serialise());
+  EXPECT_LT(session0.timestamp, session1->timestamp);
+  EXPECT_EQ(session1->ip, ip);
+  EXPECT_EQ(session1->port, port);
+  EXPECT_EQ(session1->unique_user_id, unique_user_id);
+  EXPECT_EQ(session1->root_parent_id, root_parent_id);
+
+  std::unique_ptr<AnonymousSession> session2;
+  EXPECT_NO_THROW(session2.reset(new AnonymousSession(serialised_session1)));
+  EXPECT_EQ(session1->passport->Serialise(), session2->passport->Serialise());
+  EXPECT_EQ(session1->timestamp, session2->timestamp);
+  EXPECT_EQ(session1->ip, session2->ip);
+  EXPECT_EQ(session1->port, session2->port);
+  EXPECT_EQ(session1->unique_user_id, session2->unique_user_id);
+  EXPECT_EQ(session1->root_parent_id, session2->root_parent_id);
+}
+
+TEST(AnonymousSessionTest, BEH_MoveConstructAndAssign) {
+  AnonymousSession initial_session;
+  initial_session.Serialise();  // to set timestamp
+  const NonEmptyString serialised_passport(initial_session.passport->Serialise());
+  const boost::posix_time::ptime timestamp(initial_session.timestamp);
+  const boost::asio::ip::address ip(boost::asio::ip::address::from_string("234.235.236.237"));
+  const uint16_t port(static_cast<uint16_t>(RandomUint32()));
+  const Identity unique_user_id(RandomString(64));
+  const Identity root_parent_id(RandomString(64));
+  initial_session.ip = ip;
+  initial_session.port = port;
+  initial_session.unique_user_id = unique_user_id;
+  initial_session.root_parent_id = root_parent_id;
+
+  AnonymousSession moved_to_session(std::move(initial_session));
+  EXPECT_EQ(serialised_passport, moved_to_session.passport->Serialise());
+  EXPECT_EQ(timestamp, moved_to_session.timestamp);
+  EXPECT_EQ(ip, moved_to_session.ip);
+  EXPECT_EQ(port, moved_to_session.port);
+  EXPECT_EQ(unique_user_id, moved_to_session.unique_user_id);
+  EXPECT_EQ(root_parent_id, moved_to_session.root_parent_id);
+
+  AnonymousSession assigned_to_session;
+  assigned_to_session = std::move(moved_to_session);
+  EXPECT_EQ(serialised_passport, assigned_to_session.passport->Serialise());
+  EXPECT_EQ(timestamp, assigned_to_session.timestamp);
+  EXPECT_EQ(ip, assigned_to_session.ip);
+  EXPECT_EQ(port, assigned_to_session.port);
+  EXPECT_EQ(unique_user_id, assigned_to_session.unique_user_id);
+  EXPECT_EQ(root_parent_id, assigned_to_session.root_parent_id);
 }
 
 }  // namespace test
