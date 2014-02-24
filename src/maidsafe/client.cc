@@ -29,21 +29,28 @@ Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
                const BootstrapInfo& bootstrap_info)
     : pimpl_(new detail::ClientImpl(maid, anmaid, bootstrap_info)) {}
 
-Client::~Client() {
+Client::~Client() {}
+
+Client::RegisterVaultFuture Client::RegisterVault(
+    const passport::Pmid& pmid,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->RegisterVault(pmid, timeout);
 }
 
-//========================== Vault Management ======================================================
-void Client::RegisterVault(const passport::Pmid& pmid) {
-  pimpl_->RegisterVault(pmid);
+Client::UnregisterVaultFuture Client::UnregisterVault(
+    const passport::PublicPmid::Name& pmid_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->UnregisterVault(pmid_name, timeout);
 }
 
-void Client::UnregisterVault(const passport::PublicPmid::Name& pmid_name) {
-  pimpl_->UnregisterVault(pmid_name);
+Client::OnNetworkHealthChange& Client::network_health_change_signal() {
+  return pimpl_->network_health_change_signal();
 }
 
 //========================== Data accessors and mutators ===========================================
-Client::ImmutableDataFuture Client::Get(const ImmutableData::Name& immutable_data_name,
-  const std::chrono::steady_clock::duration& timeout) {
+Client::ImmutableDataFuture Client::Get(
+    const ImmutableData::Name& immutable_data_name,
+    const std::chrono::steady_clock::duration& timeout) {
   return pimpl_->Get(immutable_data_name, timeout);
 }
 
@@ -56,7 +63,17 @@ void Client::Delete(const ImmutableData::Name& immutable_data_name) {
   pimpl_->Delete(immutable_data_name);
 }
 
-Client::VersionNamesFuture Client::GetVersions(const MutableData::Name& mutable_data_name,
+Client::CreateVersionFuture Client::CreateVersionTree(
+    const MutableData::Name& mutable_data_name,
+    const StructuredDataVersions::VersionName& first_version_name,
+    uint32_t max_versions, uint32_t max_branches,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->CreateVersionTree(mutable_data_name, first_version_name, max_versions,
+                                   max_branches, timeout);
+}
+
+Client::VersionNamesFuture Client::GetVersions(
+    const MutableData::Name& mutable_data_name,
     const std::chrono::steady_clock::duration& timeout) {
   return pimpl_->GetVersions(mutable_data_name, timeout);
 }
@@ -68,10 +85,12 @@ Client::VersionNamesFuture Client::GetBranch(
   return pimpl_->GetBranch(mutable_data_name, branch_tip, timeout);
 }
 
-Client::PutVersionFuture Client::PutVersion(const MutableData::Name& mutable_data_name,
+Client::PutVersionFuture Client::PutVersion(
+    const MutableData::Name& mutable_data_name,
     const StructuredDataVersions::VersionName& old_version_name,
-    const StructuredDataVersions::VersionName& new_version_name) {
-  return pimpl_->PutVersion(mutable_data_name, old_version_name, new_version_name);
+    const StructuredDataVersions::VersionName& new_version_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return pimpl_->PutVersion(mutable_data_name, old_version_name, new_version_name, timeout);
 }
 
 void Client::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,

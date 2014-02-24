@@ -17,11 +17,16 @@
     use of the MaidSafe Software.                                                                 */
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 
+#include "boost/asio/ip/udp.hpp"
 #include "boost/signals2/signal.hpp"
 #include "boost/thread/future.hpp"
 
+#include "maidsafe/common/rsa.h"
 #include "maidsafe/common/data_types/immutable_data.h"
 #include "maidsafe/common/data_types/mutable_data.h"
 #include "maidsafe/common/data_types/structured_data_versions.h"
@@ -34,21 +39,19 @@
 
 namespace maidsafe {
 
-namespace detail {
-  class ClientImpl;
-}
+namespace detail { class ClientImpl; }
 
 typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
+
 class Client {
  public:
-
+  typedef boost::future<void> RegisterVaultFuture, UnregisterVaultFuture;
   typedef boost::future<ImmutableData> ImmutableDataFuture;
   typedef boost::future<void> PutFuture, CreateVersionFuture;
   typedef boost::future<std::unique_ptr<StructuredDataVersions::VersionName>> PutVersionFuture;
   typedef boost::future<std::vector<StructuredDataVersions::VersionName>> VersionNamesFuture;
 
-  typedef boost::signals2::signal<void (int32_t)> OnNetworkHealthChange;
-  typedef boost::signals2::signal<void (const ImmutableData::Name&)> OnImmutableDataPutFailure;
+  typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
   // For already existing accounts
   Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
@@ -58,41 +61,51 @@ class Client {
   Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
          const BootstrapInfo& bootstrap_info);
 
+  ~Client();
+
   // FIXME need to pass registration token here as pmid key might not be available to the client
   // Discuss size parameter ??
-  void RegisterVault(const passport::Pmid& pmid);
+  RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
   // FIXME size ??
-  void UnregisterVault(const passport::PublicPmid::Name& pmid_name);
+  UnregisterVaultFuture UnregisterVault(const passport::PublicPmid::Name& pmid_name,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
-  ~Client();
-//=========================== Signals ==============================================================
+  OnNetworkHealthChange& network_health_change_signal();
 
-
-//========================== Data accessors and mutators ===========================================
-  // immutable data
-  ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
-    const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
+  //========================== Data accessors and mutators =========================================
+  // Immutable data
+  ImmutableDataFuture Get(
+      const ImmutableData::Name& immutable_data_name,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
   PutFuture Put(const ImmutableData& immutable_data,
-      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
+                const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
   void Delete(const ImmutableData::Name& immutable_data_name);
 
-
-  // structured data
-  CreateVersionFuture CreateVersionTree(); // FIXME
-  VersionNamesFuture GetVersions(const MutableData::Name& mutable_data_name,
+  // Structured data
+  CreateVersionFuture CreateVersionTree(
+      const MutableData::Name& mutable_data_name,
+      const StructuredDataVersions::VersionName& first_version_name,
+      uint32_t max_versions, uint32_t max_branches,
       const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
-  VersionNamesFuture GetBranch(const MutableData::Name& mutable_data_name,
-                               const StructuredDataVersions::VersionName& branch_tip,
-                               const std::chrono::steady_clock::duration& timeout =
-                                   std::chrono::seconds(10));
+  VersionNamesFuture GetVersions(
+      const MutableData::Name& mutable_data_name,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
-  PutVersionFuture PutVersion(const MutableData::Name& mutable_data_name,
-                              const StructuredDataVersions::VersionName& old_version_name,
-                              const StructuredDataVersions::VersionName& new_version_name);
+  VersionNamesFuture GetBranch(
+      const MutableData::Name& mutable_data_name,
+      const StructuredDataVersions::VersionName& branch_tip,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
+
+  PutVersionFuture PutVersion(
+      const MutableData::Name& mutable_data_name,
+      const StructuredDataVersions::VersionName& old_version_name,
+      const StructuredDataVersions::VersionName& new_version_name,
+      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);

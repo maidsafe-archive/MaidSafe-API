@@ -32,17 +32,19 @@ namespace maidsafe {
 namespace detail {
 
 class ClientImpl {
-
  public:
-
   ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
-  // throws on failure to create account
+
   ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
              const BootstrapInfo& bootstrap_info);
 
-  void RegisterVault(const passport::Pmid& pmid);
+  Client::RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
+                                            const std::chrono::steady_clock::duration& timeout);
 
-  void UnregisterVault(const passport::PublicPmid::Name& pmid_name);
+  Client::UnregisterVaultFuture UnregisterVault(const passport::PublicPmid::Name& pmid_name,
+                                                const std::chrono::steady_clock::duration& timeout);
+
+  Client::OnNetworkHealthChange& network_health_change_signal();
 
   Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,
                                   const std::chrono::steady_clock::duration& timeout);
@@ -51,6 +53,12 @@ class ClientImpl {
                         const std::chrono::steady_clock::duration& timeout);
 
   void Delete(const ImmutableData::Name& immutable_data_name);
+
+  Client::CreateVersionFuture CreateVersionTree(
+      const MutableData::Name& mutable_data_name,
+      const StructuredDataVersions::VersionName& first_version_name,
+      uint32_t max_versions, uint32_t max_branches,
+      const std::chrono::steady_clock::duration& timeout);
 
   Client::VersionNamesFuture GetVersions(const MutableData::Name& mutable_data_name,
                                          const std::chrono::steady_clock::duration& timeout);
@@ -61,13 +69,13 @@ class ClientImpl {
 
   Client::PutVersionFuture PutVersion(const MutableData::Name& mutable_data_name,
                                       const StructuredDataVersions::VersionName& old_version_name,
-                                      const StructuredDataVersions::VersionName& new_version_name);
+                                      const StructuredDataVersions::VersionName& new_version_name,
+                                      const std::chrono::steady_clock::duration& timeout);
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
 
  private:
-
   void InitRouting(const BootstrapInfo& bootstrap_info);
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int network_health);
@@ -76,6 +84,7 @@ class ClientImpl {
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;
   int network_health_;
+  Client::OnNetworkHealthChange network_health_change_signal_;
   passport::Maid maid_;
   routing::Routing routing_;
   std::unique_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;

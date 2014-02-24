@@ -28,6 +28,7 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
+      network_health_change_signal_(),
       maid_(maid),
       routing_(maid_),
       maid_node_nfs_(),  // deferred construction until asio service is created
@@ -45,6 +46,7 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
+      network_health_change_signal_(),
       maid_(maid),
       routing_(maid_),
       maid_node_nfs_(),  // deferred construction until asio service is created
@@ -65,23 +67,31 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
   std::cout << "Done on create_account_future.get() " << std::endl;
 }
 
-void ClientImpl::RegisterVault(const passport::Pmid& pmid) {
-  passport::PublicPmid public_pmid(pmid);
-  /*auto put_future =*/ maid_node_nfs_->Put(public_pmid);
-   // BEFORE_RELEASE this should be removed once Put future is implemented in Nfs/Vault
-  std::cout << " sleeping for Put to complete " << std::endl;
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+Client::RegisterVaultFuture ClientImpl::RegisterVault(
+    const passport::Pmid& pmid,
+    const std::chrono::steady_clock::duration& /*timeout*/) {
   // put_future.get();
   nfs_vault::PmidRegistration pmid_registration(maid_, pmid, false);
+  // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
   maid_node_nfs_->RegisterPmid(pmid_registration);
+  return Client::RegisterVaultFuture();
 }
 
-void ClientImpl::UnregisterVault(const passport::PublicPmid::Name& pmid_name) {
+Client::UnregisterVaultFuture ClientImpl::UnregisterVault(
+    const passport::PublicPmid::Name& pmid_name,
+    const std::chrono::steady_clock::duration& /*timeout*/) {
+  // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
   maid_node_nfs_->UnregisterPmid(pmid_name);
+  return Client::UnregisterVaultFuture();
 }
 
-Client::ImmutableDataFuture ClientImpl::Get(const ImmutableData::Name& immutable_data_name,
-  const std::chrono::steady_clock::duration& timeout) {
+Client::OnNetworkHealthChange& ClientImpl::network_health_change_signal() {
+  return network_health_change_signal_;
+}
+
+Client::ImmutableDataFuture ClientImpl::Get(
+    const ImmutableData::Name& immutable_data_name,
+    const std::chrono::steady_clock::duration& timeout) {
   return maid_node_nfs_->Get(immutable_data_name, timeout);
 }
 
@@ -93,6 +103,15 @@ Client::PutFuture ClientImpl::Put(const ImmutableData& immutable_data,
 
 void ClientImpl::Delete(const ImmutableData::Name& immutable_data_name) {
   maid_node_nfs_->Delete(immutable_data_name);
+}
+
+Client::CreateVersionFuture ClientImpl::CreateVersionTree(
+      const MutableData::Name& mutable_data_name,
+      const StructuredDataVersions::VersionName& first_version_name,
+      uint32_t max_versions, uint32_t max_branches,
+      const std::chrono::steady_clock::duration& timeout) {
+  // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
+  maid_node_nfs_->CreateVersionTree(mutable_data_name);
 }
 
 Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& mutable_data_name,
