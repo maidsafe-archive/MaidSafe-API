@@ -17,6 +17,7 @@
     use of the MaidSafe Software.                                                                 */
 
 #include "maidsafe/client.h"
+#include "maidsafe/detail/client_impl.h"
 
 #include "maidsafe/common/test.h"
 #include "maidsafe/routing/parameters.h"
@@ -38,10 +39,18 @@ TEST(ClientTest, BEH_Constructor) {
   }
   std::cout << "joining existing account" << std::endl;
   Client client_existing_account(maid, bootstrap_info);
+  passport::PublicPmid public_pmid(pmid);
+  std::cout << "put pmid public key on network " << HexSubstr(public_pmid.name()->string())
+            << std::endl;
+  client_existing_account.pimpl_->maid_node_nfs_->Put(public_pmid);
+  std::this_thread::sleep_for(std::chrono::seconds(5));  // to be replaced by future.get()
+  auto get_future = client_existing_account.pimpl_->maid_node_nfs_->Get(public_pmid.name());
+  std::cout << " waiting to get pmid public key from network " << std::endl;
+  get_future.get();
   std::cout << " RegisterVault " << std::endl;
   client_existing_account.RegisterVault(pmid);
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  // need to start a Vault now to Put
+  // need to start a Vault now to Put data on network
 }
 
 }  // namespace test

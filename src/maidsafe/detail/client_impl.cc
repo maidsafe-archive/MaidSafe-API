@@ -70,7 +70,6 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
 Client::RegisterVaultFuture ClientImpl::RegisterVault(
     const passport::Pmid& pmid,
     const std::chrono::steady_clock::duration& /*timeout*/) {
-  // put_future.get();
   nfs_vault::PmidRegistration pmid_registration(maid_, pmid, false);
   // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
   maid_node_nfs_->RegisterPmid(pmid_registration);
@@ -153,7 +152,7 @@ void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
 
 #ifdef TESTING
   if (!network_health_condition_variable_.wait_for(lock, std::chrono::minutes(5), [this] {
-         return network_health_ >= 100;  // FIXME need parameter here ?
+         return network_health_ == 100;
        }))
     BOOST_THROW_EXCEPTION(MakeError(VaultErrors::failed_to_join_network));
 #else

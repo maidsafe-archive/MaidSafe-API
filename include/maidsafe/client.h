@@ -38,6 +38,9 @@
 #define MAIDSAFE_CLIENT_H_
 
 namespace maidsafe {
+namespace test {
+  class ClientTest_BEH_Constructor_Test;
+}
 
 namespace detail { class ClientImpl; }
 
@@ -109,6 +112,8 @@ class Client {
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
+
+  friend class test::ClientTest_BEH_Constructor_Test;
 
  private:
   std::unique_ptr<detail::ClientImpl> pimpl_;
