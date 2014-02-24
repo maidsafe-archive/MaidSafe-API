@@ -19,7 +19,6 @@
 #ifndef MAIDSAFE_H_
 #define MAIDSAFE_H_
 
-#include "maidsafe/api.h"
 #include "maidsafe/anonymous_session.h"
 #include "maidsafe/client.h"
 #include "maidsafe/encryptor.h"
