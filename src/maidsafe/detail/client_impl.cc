@@ -110,7 +110,8 @@ Client::CreateVersionFuture ClientImpl::CreateVersionTree(
       uint32_t max_versions, uint32_t max_branches,
       const std::chrono::steady_clock::duration& timeout) {
   // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
-  maid_node_nfs_->CreateVersionTree(mutable_data_name);
+  return maid_node_nfs_->CreateVersionTree(mutable_data_name, first_version_name, max_versions,
+                                           max_branches, timeout);
 }
 
 Client::VersionNamesFuture ClientImpl::GetVersions(const MutableData::Name& mutable_data_name,
@@ -126,9 +127,9 @@ Client::VersionNamesFuture ClientImpl::GetBranch(const MutableData::Name& mutabl
 
 Client::PutVersionFuture ClientImpl::PutVersion(const MutableData::Name& mutable_data_name,
     const StructuredDataVersions::VersionName& old_version_name,
-    const StructuredDataVersions::VersionName& new_version_name) {
-  maid_node_nfs_->PutVersion(mutable_data_name, old_version_name, new_version_name);
-  return Client::PutVersionFuture(); // FIXME need to return a future from maid_node_nfs_->PutVersion()
+    const StructuredDataVersions::VersionName& new_version_name,
+    const std::chrono::steady_clock::duration& timeout) {
+  return maid_node_nfs_->PutVersion(mutable_data_name, old_version_name, new_version_name, timeout);
 }
 
 void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
