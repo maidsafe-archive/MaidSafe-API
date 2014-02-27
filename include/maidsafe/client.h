@@ -39,7 +39,7 @@
 
 namespace maidsafe {
 namespace test {
-  class ClientTest_BEH_Constructor_Test;
+  class ClientTest_BEH_RegisterVault_Test;
 }
 
 namespace detail { class ClientImpl; }
@@ -66,8 +66,7 @@ class Client {
 
   ~Client();
 
-  // FIXME need to pass registration token here as pmid key might not be available to the client
-  // Discuss size parameter ??
+  // FIXME Discuss size parameter ??
   RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
       const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
@@ -113,7 +112,7 @@ class Client {
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
 
-  friend class test::ClientTest_BEH_Constructor_Test;
+  friend class test::ClientTest_BEH_RegisterVault_Test;
 
  private:
   std::unique_ptr<detail::ClientImpl> pimpl_;

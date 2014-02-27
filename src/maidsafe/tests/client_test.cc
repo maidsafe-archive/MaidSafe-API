@@ -17,18 +17,39 @@
     use of the MaidSafe Software.                                                                 */
 
 #include "maidsafe/client.h"
-#include "maidsafe/detail/client_impl.h"
 
+#include "boost/process/child.hpp"
+#include "boost/process/execute.hpp"
+#include "boost/process/initializers.hpp"
+#include "boost/process/wait_for_exit.hpp"
+
+#include "maidsafe/common/process.h"
 #include "maidsafe/common/test.h"
 #include "maidsafe/routing/parameters.h"
+
+#include "maidsafe/detail/client_impl.h"
 
 namespace maidsafe {
 
 namespace test {
 
+namespace bp = boost::process;
 
 // Pre-condition : Need a Vault network running
 TEST(ClientTest, BEH_Constructor) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  BootstrapInfo bootstrap_info;
+  passport::Anmaid anmaid;
+  passport::Maid maid(anmaid);
+  passport::Pmid pmid(maid);
+  {
+    Client client_new_account(maid, anmaid, bootstrap_info);
+  }
+  std::cout << "joining existing account" << std::endl;
+  Client client_existing_account(maid, bootstrap_info);
+}
+
+TEST(ClientTest, BEH_RegisterVault) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   passport::Anmaid anmaid;
@@ -51,6 +72,25 @@ TEST(ClientTest, BEH_Constructor) {
   client_existing_account.RegisterVault(pmid);
   std::this_thread::sleep_for(std::chrono::seconds(5));
   // need to start a Vault now to Put data on network
+}
+
+// Pre-condition : Need a Vault network running
+// FIXME: This test will need Vault Manager to pass pmid keys to Vaults via tcp
+TEST(ClientTest, BEH_StartVault) {
+  const auto kVaultExePath = process::GetOtherExecutablePath(boost::filesystem::path("vault"));
+  std::cout << "vault_exe_path : " << kVaultExePath.string();
+  std::vector<std::string> process_args;
+  process_args.push_back(kVaultExePath.string());
+  process_args.push_back(" --help");
+  const auto kCommandLine = process::ConstructCommandLine(process_args);
+  std::cout << "kCommandLine : " << kCommandLine;
+  boost::system::error_code error_code;
+  bp::child child = bp::child(bp::execute(bp::initializers::run_exe(kVaultExePath),
+                              bp::initializers::set_cmd_line(kCommandLine),
+                              bp::initializers::set_on_error(error_code)));
+  ASSERT_FALSE(error_code);
+//  int exit_code(99);
+  /*exit_code =*/ wait_for_exit(child, error_code);
 }
 
 }  // namespace test

@@ -30,7 +30,7 @@
 namespace maidsafe {
 
 namespace test {
-  class ClientTest_BEH_Constructor_Test;
+  class ClientTest_BEH_RegisterVault_Test;
 }
 
 namespace detail {
@@ -78,7 +78,7 @@ class ClientImpl {
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
-  friend class test::ClientTest_BEH_Constructor_Test;
+  friend class test::ClientTest_BEH_RegisterVault_Test;
 
  private:
   void InitRouting(const BootstrapInfo& bootstrap_info);

@@ -84,11 +84,13 @@ endif()
 # Define MaidSafe libraries and executables                                                        #
 #==================================================================================================#
 ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles})
+
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
 
 if(MaidsafeTesting)
   ms_add_executable(TESTapi "Tests/API" ${ApiTestsAllFiles})
+  add_dependencies(TESTapi vault)
   target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(TESTapi maidsafe_api)
 endif()
