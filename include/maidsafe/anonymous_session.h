@@ -41,16 +41,9 @@ struct AnonymousSession {
   // error.
   AnonymousSession();
 
-  // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
-  explicit AnonymousSession(SerialisedType serialised_session);
-
   // Move-constructible and move-assignable only
   AnonymousSession(AnonymousSession&& other);
   AnonymousSession& operator=(AnonymousSession other);
-
-  // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
-  // struct.  Throws on error.
-  SerialisedType Serialise();
 
   std::unique_ptr<passport::Passport> passport;
   boost::posix_time::ptime timestamp;
@@ -61,6 +54,13 @@ struct AnonymousSession {
 
  private:
   AnonymousSession(const AnonymousSession&) MAIDSAFE_DELETE;
+
+  // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
+  // struct.  Throws on error.
+  SerialisedType Serialise();
+
+  // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
+  explicit AnonymousSession(SerialisedType serialised_session);
 };
 
 void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;
