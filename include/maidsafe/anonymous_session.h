@@ -33,6 +33,11 @@
 
 namespace maidsafe {
 
+namespace test {
+  class AnonymousSessionTest_BEH_SaveAndLogin_Test;
+  class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+}
+
 struct AnonymousSession {
   // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
   typedef TaggedValue<std::string, struct AnonymousSessiontag> SerialisedType;
@@ -51,6 +56,9 @@ struct AnonymousSession {
   uint16_t port;
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
+
+  friend class test::AnonymousSessionTest_BEH_SaveAndLogin_Test;
+  friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
 
  private:
   AnonymousSession(const AnonymousSession&) MAIDSAFE_DELETE;

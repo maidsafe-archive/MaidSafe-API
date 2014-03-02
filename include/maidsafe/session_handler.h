@@ -19,8 +19,9 @@
 #ifndef MAIDSAFE_SESSION_HANDLER_
 #define MAIDSAFE_SESSION_HANDLER_
 
-#include "maidsafe/client.h"
+#include "maidsafe/common/crypto.h"
 
+#include "maidsafe/client.h"
 #include "maidsafe/user_credentials.h"
 #include "maidsafe/detail/session_getter.h"
 
@@ -35,15 +36,65 @@ inline Identity GetSessionLocation(const passport::detail::Keyword& keyword,
 }
 
 // friend of AnonymousSession
-//template <typename Session>
-//ImmutableData EncryptSession(const UserCredentials& user_credential,
-//                             Session& session) {
-//  std::string serialised_session(session_.Serialise().data);
-//  crypto::SecurePassword secure_password(CreateSecureTmidPassword(password, pin));
-//  return EncryptedSession(crypto::SymmEncrypt(XorData(keyword, pin, password, serialised_session),
-//                                              SecureKey(secure_password),
-//                                              SecureIv(secure_password)));
-//}
+// Update session here ?
+template <typename Session>
+ImmutableData EncryptSession(const UserCredentials& user_credential,
+                             Session& session) {
+  std::string serialised_session(session.Serialise().data);
+
+  crypto::SecurePassword secure_password(CreateSecureTmidPassword(user_credential.password,
+                                                                  user_credential.pin));
+  return ImmutableData(crypto::SymmEncrypt(XorData(user_credential.keyword, user_credential.pin,
+                                                   user_credential.password, serialised_session),
+                                           SecureKey(secure_password),
+                                           SecureIv(secure_password)));
+}
+
+template <typename Session>
+Session DecryptSession(const UserCredentials& user_credential,
+                       const ImmutableData& encrypted_session) {
+  crypto::SecurePassword secure_password(CreateSecureTmidPassword(user_credential.password,
+                                                                  user_credential.pin));
+  return Session(
+      Session::SerialisedType(XorData(
+          user_credential.keyword,
+          user_credential.pin,
+          user_credential.password,
+          crypto::SymmDecrypt(encrypted_session.data, SecureKey(secure_password),
+                              SecureIv(secure_password)))));
+}
+
+// TODO move to utility file
+crypto::SecurePassword CreateSecureTmidPassword(const passport::detail::Password& password,
+                                                const passport::detail::Pin& pin) {
+  crypto::Salt salt(crypto::Hash<crypto::SHA512>(pin.Hash<crypto::SHA512>() + password.string()));
+  assert(pin.Value() <= std::numeric_limits<uint32_t>::max());
+  return crypto::CreateSecurePassword<Password>(password, salt, static_cast<uint32_t>(pin.Value()));
+}
+
+// TODO move to utility file
+NonEmptyString XorData(const passport::detail::Keyword& keyword,
+                       const passport::detail::Pin& pin,
+                       const passport::detail::Password& password,
+                       const NonEmptyString& data) {
+  assert(pin.Value() <= std::numeric_limits<uint32_t>::max());
+  uint32_t pin_value(static_cast<uint32_t>(pin.Value()));
+  uint32_t rounds(pin_value / 2 == 0 ? (pin_value * 3) / 2 : pin_value / 2);
+  std::string obfuscation_str = crypto::CreateSecurePassword<Keyword>(
+      keyword,
+      crypto::Salt(crypto::Hash<crypto::SHA512>(password.string() + pin.Hash<crypto::SHA512>())),
+      rounds).string();
+  // make the obfuscation_str of same size for XOR
+  if (data.string().size() < obfuscation_str.size()) {
+    obfuscation_str.resize(data.string().size());
+  } else if (data.string().size() > obfuscation_str.size()) {
+    obfuscation_str.reserve(data.string().size());
+    while (data.string().size() > obfuscation_str.size())
+      obfuscation_str += obfuscation_str;
+    obfuscation_str.resize(data.string().size());
+  }
+  return NonEmptyString(crypto::XOR(data.string(), obfuscation_str));
+}
 
 }  // namspace detail
 
@@ -93,15 +144,23 @@ SessionHandler<Session>::SessionHandler(const Session& session, Client& client,
   // TODO Validate credentials
   auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
                                                    *user_credentials_.pin));
-  ImmutableData serialised_session; // = EncryptSession();
-  auto put_future = client.Put(serialised_session);
+  ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
+
+  auto put_future = client.Put(encrypted_serialised_session);
   put_future.get();
-  auto create_version_tree_future = client.CreateVersionTree(
-      MutableData::Name(session_location),
-      StructuredDataVersions::VersionName(0, serialised_session.name()),
-      20,
-      1);
-  create_version_tree_future.get();
+
+  try {
+    auto create_version_tree_future = client.CreateVersionTree(
+        MutableData::Name(session_location),
+        StructuredDataVersions::VersionName(0, encrypted_serialised_session.name()),
+        20,
+        1);
+    create_version_tree_future.get();
+  } catch (const std::exception& e) {
+    LOG(kError) << e.what();
+    client.Delete(encrypted_serialised_session.name());
+    throw;
+  }
 }
 
 // throw if session is already exist
@@ -115,6 +174,14 @@ void SessionHandler<Session>::Login(UserCredentials&& /*user_credentials*/) {
 //  get immutable data with name as per version name
 //  decrypt immutable data
   // destroy session getter if success
+  auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
+                                                   *user_credentials_.pin));
+  auto versions = session_getter_.GetVersions(MutableData::Name(session_location));
+  assert(versions.size() == 1);
+  auto encrypted_serialised_session = session_getter_.Get(versions.at(0).id);
+
+  session_.reset(new Session(detail::DecryptSession(encrypted_serialised_session)));
+  session_getter_.reset();
 }
 
 template <typename Session>
