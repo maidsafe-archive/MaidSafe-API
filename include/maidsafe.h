@@ -16,12 +16,13 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_H_
-#define MAIDSAFE_H_
+#ifndef MAIDSAFE_MAIDSAFE_H_  // NOLINT
+#define MAIDSAFE_MAIDSAFE_H_
 
 #include "maidsafe/anonymous_session.h"
 #include "maidsafe/client.h"
 #include "maidsafe/encryptor.h"
 #include "maidsafe/session_handler.h"
+#include "maidsafe/user_credentials.h"
 
-#endif  // MAIDSAFE_H_
+#endif  // MAIDSAFE_MAIDSAFE_H_  NOLINT

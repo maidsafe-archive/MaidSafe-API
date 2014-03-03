@@ -40,6 +40,8 @@ include(../../cmake_modules/standard_setup.cmake)
 # Set up all files as GLOBs                                                                        #
 #==================================================================================================#
 set(ApiSourcesDir ${PROJECT_SOURCE_DIR}/src/maidsafe)
+set(ConvenienceHeader ${PROJECT_SOURCE_DIR}/include/maidsafe.h)
+source_group("API Convenience Header" FILES ${ConvenienceHeader})
 ms_glob_dir(Api ${ApiSourcesDir} "API")
 source_group("API Public Files" FILES ${ApiApi})
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
@@ -47,7 +49,7 @@ source_group("API Detail Public Files" FILES ${ApiDetailApi})
 ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
 
 # Check convenience header is up to date
-file(STRINGS ${PROJECT_SOURCE_DIR}/include/maidsafe.h MaidSafeHeader REGEX "#include")
+file(STRINGS ${ConvenienceHeader} MaidSafeHeader REGEX "#include")
 foreach(IncludeLine ${MaidSafeHeader})
   string(REGEX REPLACE "^#include[ ]*[\"<]([^\">]*)[\">]" "\\1" IncludeFile "${IncludeLine}")
   if(NOT "${IncludeFile}" STREQUAL "${IncludeLine}")  # i.e. regex replace worked
@@ -83,7 +85,7 @@ endif()
 #==================================================================================================#
 # Define MaidSafe libraries and executables                                                        #
 #==================================================================================================#
-ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles})
+ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles} ${ConvenienceHeader})
 
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
