@@ -31,7 +31,10 @@
 #include "maidsafe/common/types.h"
 #include "maidsafe/passport/passport.h"
 
+#include "maidsafe/session_handler.h"
+
 namespace maidsafe {
+
 
 namespace test {
   class AnonymousSessionTest_BEH_SaveAndLogin_Test;
@@ -56,7 +59,12 @@ struct AnonymousSession {
   uint16_t port;
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
-
+  template <typename Session>
+  friend ImmutableData detail::EncryptSession(const UserCredentials& user_credential,
+                                              Session& session);
+  template <typename Session>
+  friend Session detail::DecryptSession(const UserCredentials& user_credential,
+                                        const ImmutableData& encrypted_session);
   friend class test::AnonymousSessionTest_BEH_SaveAndLogin_Test;
   friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
 

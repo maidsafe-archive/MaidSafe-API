@@ -16,11 +16,37 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#include "maidsafe/session_handler.h"
+
+#include "maidsafe/common/test.h"
+#include "maidsafe/routing/parameters.h"
+
+#include "maidsafe/anonymous_session.h"
+#include "maidsafe/user_credentials.h"
+
+
 namespace maidsafe {
 
 namespace test {
 
+// Pre-condition : Need a Vault network running
+TEST(SessionHandlerTest, BEH_Constructor) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  BootstrapInfo bootstrap_info;
+  {
+     SessionHandler<AnonymousSession> session_handler(bootstrap_info);
+  }
+  {
+    passport::Anmaid anmaid;
+    passport::Maid maid(anmaid);
+    passport::Pmid pmid(maid);
+    Client client(maid, anmaid, bootstrap_info);
+    AnonymousSession session;
+    UserCredentials user_credentials;
 
+    SessionHandler<AnonymousSession> session_handler(session, client, std::move(user_credentials));
+  }
+}
 
 }  // namespace test
 

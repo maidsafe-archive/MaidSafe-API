@@ -19,8 +19,6 @@
 #ifndef MAIDSAFE_SESSION_HANDLER_
 #define MAIDSAFE_SESSION_HANDLER_
 
-#include "maidsafe/common/crypto.h"
-
 #include "maidsafe/client.h"
 #include "maidsafe/user_credentials.h"
 #include "maidsafe/detail/session_getter.h"
@@ -30,71 +28,29 @@ namespace maidsafe {
 namespace detail {
 
 inline Identity GetSessionLocation(const passport::detail::Keyword& keyword,
-                                   const passport::detail::Pin& pin) {
-  return Identity(crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
-                                               pin.Hash<crypto::SHA512>().string()));
-}
+                                   const passport::detail::Pin& pin);
 
 // friend of AnonymousSession
 // Update session here ?
 template <typename Session>
 ImmutableData EncryptSession(const UserCredentials& user_credential,
-                             Session& session) {
-  std::string serialised_session(session.Serialise().data);
-
-  crypto::SecurePassword secure_password(CreateSecureTmidPassword(user_credential.password,
-                                                                  user_credential.pin));
-  return ImmutableData(crypto::SymmEncrypt(XorData(user_credential.keyword, user_credential.pin,
-                                                   user_credential.password, serialised_session),
-                                           SecureKey(secure_password),
-                                           SecureIv(secure_password)));
-}
+                             Session& session);
 
 template <typename Session>
 Session DecryptSession(const UserCredentials& user_credential,
-                       const ImmutableData& encrypted_session) {
-  crypto::SecurePassword secure_password(CreateSecureTmidPassword(user_credential.password,
-                                                                  user_credential.pin));
-  return Session(
-      Session::SerialisedType(XorData(
-          user_credential.keyword,
-          user_credential.pin,
-          user_credential.password,
-          crypto::SymmDecrypt(encrypted_session.data, SecureKey(secure_password),
-                              SecureIv(secure_password)))));
-}
+                       const ImmutableData& encrypted_session);
 
 // TODO move to utility file
 crypto::SecurePassword CreateSecureTmidPassword(const passport::detail::Password& password,
-                                                const passport::detail::Pin& pin) {
-  crypto::Salt salt(crypto::Hash<crypto::SHA512>(pin.Hash<crypto::SHA512>() + password.string()));
-  assert(pin.Value() <= std::numeric_limits<uint32_t>::max());
-  return crypto::CreateSecurePassword<Password>(password, salt, static_cast<uint32_t>(pin.Value()));
-}
+                                                const passport::detail::Pin& pin);
 
 // TODO move to utility file
 NonEmptyString XorData(const passport::detail::Keyword& keyword,
                        const passport::detail::Pin& pin,
                        const passport::detail::Password& password,
-                       const NonEmptyString& data) {
-  assert(pin.Value() <= std::numeric_limits<uint32_t>::max());
-  uint32_t pin_value(static_cast<uint32_t>(pin.Value()));
-  uint32_t rounds(pin_value / 2 == 0 ? (pin_value * 3) / 2 : pin_value / 2);
-  std::string obfuscation_str = crypto::CreateSecurePassword<Keyword>(
-      keyword,
-      crypto::Salt(crypto::Hash<crypto::SHA512>(password.string() + pin.Hash<crypto::SHA512>())),
-      rounds).string();
-  // make the obfuscation_str of same size for XOR
-  if (data.string().size() < obfuscation_str.size()) {
-    obfuscation_str.resize(data.string().size());
-  } else if (data.string().size() > obfuscation_str.size()) {
-    obfuscation_str.reserve(data.string().size());
-    while (data.string().size() > obfuscation_str.size())
-      obfuscation_str += obfuscation_str;
-    obfuscation_str.resize(data.string().size());
-  }
-  return NonEmptyString(crypto::XOR(data.string(), obfuscation_str));
-}
+                       const NonEmptyString& data);
+crypto::AES256Key SecureKey(const crypto::SecurePassword& secure_password);
+crypto::AES256InitialisationVector SecureIv(const crypto::SecurePassword& secure_password);
 
 }  // namspace detail
 
@@ -113,8 +69,8 @@ class SessionHandler {
 
  private:
   ImmutableData EncryptSession();
-  std::unique_ptr<typename Session> session_;
-  std::unique_ptr<SessionGetter> session_getter_;
+  std::unique_ptr<Session> session_;
+  std::unique_ptr<detail::SessionGetter> session_getter_;
   // versions of session
   UserCredentials user_credentials_;
 };
@@ -123,14 +79,52 @@ class SessionHandler {
 
 //================== Implementation ================================================================
 
+
+namespace detail {
+
+// Update session here ?
+template <typename Session>
+ImmutableData EncryptSession(const UserCredentials& user_credential,
+                             Session& session) {
+  auto serialised_session(session.Serialise().data);
+
+  crypto::SecurePassword secure_password(CreateSecureTmidPassword(*user_credential.password,
+                                                                  *user_credential.pin));
+  return ImmutableData(crypto::SymmEncrypt(XorData(*user_credential.keyword,
+                                                   *user_credential.pin,
+                                                   *user_credential.password,
+                                                   NonEmptyString(serialised_session)),
+                                           SecureKey(secure_password),
+                                           SecureIv(secure_password)));
+}
+
+template <typename Session>
+Session DecryptSession(const UserCredentials& user_credential,
+                       const ImmutableData& encrypted_session) {
+  crypto::SecurePassword secure_password(CreateSecureTmidPassword(*user_credential.password,
+                                                                  *user_credential.pin));
+  return Session(
+      Session::SerialisedType(XorData(
+          *user_credential.keyword,
+          *user_credential.pin,
+          *user_credential.password,
+          crypto::SymmDecrypt(encrypted_session.data(), SecureKey(secure_password),
+                              SecureIv(secure_password)))));
+}
+
+}  // namespace detail
+
+
 // Joins with anonymous data getter for getting session data from network
 // Used for already existing accounts
 template <typename Session>
 SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
     : session_(),
-      session_getter_(new SessionGetter(bootstrap_info)),
+      session_getter_(new detail::SessionGetter(bootstrap_info)),
       user_credentials_() {}
+
 // Used when creating new account
+// expects a joined client as a parameter
 // throws if failed to create maid account
 // Internally saves session after creating user account
 // throws if failed to save session
@@ -166,45 +160,50 @@ SessionHandler<Session>::SessionHandler(const Session& session, Client& client,
 // throw if session is already exist
 // this method should not be called when creating account with session handle construct
 template <typename Session>
-void SessionHandler<Session>::Login(UserCredentials&& /*user_credentials*/) {
-  // throw (session_ !- nullptr);
+void SessionHandler<Session>::Login(UserCredentials&& user_credentials) {
+  if (session_ != nullptr) {
+    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+  }
 //  get session location
 //  get tip of tree
 //  assert vector size == 1 - this is latest version
 //  get immutable data with name as per version name
 //  decrypt immutable data
-  // destroy session getter if success
-  auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
-                                                   *user_credentials_.pin));
-  auto versions = session_getter_.GetVersions(MutableData::Name(session_location));
+// destroy session getter if success
+  auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
+                                                   *user_credentials.pin));
+  auto versions_future = session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
+  auto versions(versions_future.get());
   assert(versions.size() == 1);
-  auto encrypted_serialised_session = session_getter_.Get(versions.at(0).id);
-
-  session_.reset(new Session(detail::DecryptSession(encrypted_serialised_session)));
+  auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
+  auto encrypted_serialised_session(encrypted_serialised_session_future.get());
+  session_.reset(new Session(detail::DecryptSession<Session>(user_credentials,
+                                                             encrypted_serialised_session)));
+  user_credentials_ = std::move(user_credentials);
   session_getter_.reset();
 }
 
 template <typename Session>
-void SessionHandler<Session>::Save(Client& /*client*/) {
+void SessionHandler<Session>::Save(Client& client) {
 //    encrypt session
 //    store enc session
 //    put version (current version name, new version name)
 //    relpace current version name with new one
+  ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
+  auto put_future = client.Put(encrypted_serialised_session);
+  put_future.get();
+
+  try {
+    auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
+                                                     *user_credentials_.pin));
+//    auto put_version_future = client.PutVersion();  // FIXME
+//    put_version_future.get();
+  } catch (const std::exception& e) {
+    LOG(kError) << e.what();
+    client.Delete(encrypted_serialised_session.name());
+    throw;
+  }
 }
-
-template <typename Session>
-ImmutableData EncryptSession() {
-  crypto::SecurePassword secure_password(CreateSecureTmidPassword(password, pin));
-  return EncryptedSession(crypto::SymmEncrypt(XorData(keyword, pin, password, serialised_session),
-                                              SecureKey(secure_password),
-                                              SecureIv(secure_password)));
-}
-
-
-
-
-
-
 
 }  // namespace maidsafe
 
