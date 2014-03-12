@@ -19,6 +19,8 @@
 #ifndef MAIDSAFE_DETAIL_SESSION_GETTER_H_
 #define MAIDSAFE_DETAIL_SESSION_GETTER_H_
 
+#include <utility>
+#include <vector>
 
 #include "maidsafe/routing/routing_api.h"
 
@@ -31,14 +33,11 @@ typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>>
 namespace detail {
 
 class SessionGetter {
-
  public:
-
-  SessionGetter(const BootstrapInfo& bootstrap_info);
+  explicit SessionGetter(const BootstrapInfo& bootstrap_info);
   nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
  private:
-
   void InitRouting(const BootstrapInfo& bootstrap_info);
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int network_health);

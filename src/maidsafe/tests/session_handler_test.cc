@@ -39,12 +39,12 @@ TEST(SessionHandlerTest, BEH_Constructor) {
   {
     passport::Anmaid anmaid;
     passport::Maid maid(anmaid);
-    passport::Pmid pmid(maid);
     Client client(maid, anmaid, bootstrap_info);
     AnonymousSession session;
     UserCredentials user_credentials;
 
-    SessionHandler<AnonymousSession> session_handler(session, client, std::move(user_credentials));
+    SessionHandler<AnonymousSession> session_handler(std::move(session), client,
+                                                     std::move(user_credentials));
   }
 }
 

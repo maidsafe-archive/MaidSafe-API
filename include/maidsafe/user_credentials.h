@@ -19,12 +19,23 @@
 #ifndef MAIDSAFE_USER_CREDENTIALS_H_
 #define MAIDSAFE_USER_CREDENTIALS_H_
 
+#include <memory>
+
 #include "maidsafe/passport/detail/secure_string.h"
 
 namespace maidsafe {
 
 // FIXME
 struct UserCredentials {
+  UserCredentials() : keyword(), pin(), password() {}
+  UserCredentials(UserCredentials&& other) : keyword(std::move(other.keyword)),
+      pin(std::move(other.pin)), password(std::move(other.password)) {}
+  UserCredentials& operator=(UserCredentials&& other) {
+    keyword = std::move(other.keyword);
+    pin = std::move(other.pin);
+    password = std::move(other.password);
+    return *this;
+  }
   std::unique_ptr<passport::detail::Keyword> keyword;
   std::unique_ptr<passport::detail::Pin> pin;
   std::unique_ptr<passport::detail::Password> password;

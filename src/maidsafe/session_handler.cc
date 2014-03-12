@@ -25,7 +25,7 @@ namespace maidsafe {
 namespace detail {
 
 Identity GetSessionLocation(const passport::detail::Keyword& keyword,
-                                   const passport::detail::Pin& pin) {
+                            const passport::detail::Pin& pin) {
   return Identity(crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
                                                pin.Hash<crypto::SHA512>().string()));
 }
@@ -45,8 +45,7 @@ crypto::SecurePassword CreateSecureTmidPassword(const passport::detail::Password
   crypto::Salt salt(crypto::Hash<crypto::SHA512>(pin.Hash<crypto::SHA512>() + password.string()));
   assert(pin.Value() <= std::numeric_limits<uint32_t>::max());
   return crypto::CreateSecurePassword<passport::detail::Password>(password,
-                                                                  salt,
-                                                                  static_cast<uint32_t>(pin.Value()));
+      salt, static_cast<uint32_t>(pin.Value()));
 }
 
 // TODO move to utility file
@@ -73,6 +72,6 @@ NonEmptyString XorData(const passport::detail::Keyword& keyword,
   return NonEmptyString(crypto::XOR(data.string(), obfuscation_str));
 }
 
-}  // namspace detail
+}  // namespace detail
 
 }  // namespace maidsafe

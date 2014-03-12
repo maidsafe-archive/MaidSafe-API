@@ -16,8 +16,8 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_SESSION_HANDLER_
-#define MAIDSAFE_SESSION_HANDLER_
+#ifndef MAIDSAFE_SESSION_HANDLER_H_
+#define MAIDSAFE_SESSION_HANDLER_H_
 
 #include "maidsafe/client.h"
 #include "maidsafe/user_credentials.h"
@@ -27,8 +27,8 @@ namespace maidsafe {
 
 namespace detail {
 
-inline Identity GetSessionLocation(const passport::detail::Keyword& keyword,
-                                   const passport::detail::Pin& pin);
+Identity GetSessionLocation(const passport::detail::Keyword& keyword,
+                            const passport::detail::Pin& pin);
 
 // friend of AnonymousSession
 // Update session here ?
@@ -52,7 +52,7 @@ NonEmptyString XorData(const passport::detail::Keyword& keyword,
 crypto::AES256Key SecureKey(const crypto::SecurePassword& secure_password);
 crypto::AES256InitialisationVector SecureIv(const crypto::SecurePassword& secure_password);
 
-}  // namspace detail
+}  // namespace detail
 
 template <typename Session>
 class SessionHandler {
@@ -61,7 +61,7 @@ class SessionHandler {
   explicit SessionHandler(const BootstrapInfo& bootstrap_info);
   // Used for creating new account
   // throws if account can't be created on network
-  SessionHandler(const Session& session, Client& client, UserCredentials&& user_credentials);
+  SessionHandler(Session&& session, Client& client, UserCredentials&& user_credentials);
   // No need to login for new accounts
   void Login(UserCredentials&& user_credentials);
   // Saves session on the network using client
@@ -129,10 +129,10 @@ SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
 // Internally saves session after creating user account
 // throws if failed to save session
 template <typename Session>
-SessionHandler<Session>::SessionHandler(const Session& session, Client& client,
+SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
                                         UserCredentials&& user_credentials)
-    : session_(new Session(session)),
-      session_getter_(), // Not reqired when creating account.
+    : session_(new Session(std::move(session))),
+      session_getter_(),  // Not reqired when creating account.
       user_credentials_(std::move(user_credentials)) {
   // throw if client & session are not coherent
   // TODO Validate credentials
@@ -172,7 +172,8 @@ void SessionHandler<Session>::Login(UserCredentials&& user_credentials) {
 // destroy session getter if success
   auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
                                                    *user_credentials.pin));
-  auto versions_future = session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
+  auto versions_future =
+      session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
   auto versions(versions_future.get());
   assert(versions.size() == 1);
   auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
@@ -207,4 +208,4 @@ void SessionHandler<Session>::Save(Client& client) {
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_SESSION_HANDLER_
+#endif  // MAIDSAFE_SESSION_HANDLER_H_

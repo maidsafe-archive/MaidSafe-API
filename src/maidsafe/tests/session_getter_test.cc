@@ -40,6 +40,6 @@ TEST(SessionGetterTest, BEH_Constructor) {
 
 }  // namespace test
 
-}
+}  // namespace detail
 
 }  // namespace maidsafe

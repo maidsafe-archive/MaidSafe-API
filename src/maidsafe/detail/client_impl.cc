@@ -19,10 +19,12 @@
 
 #include "maidsafe/detail/client_impl.h"
 
+#include <string>
+#include <vector>
+
 namespace maidsafe {
 
 namespace detail {
-
 
 ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info)
     : network_health_mutex_(),
@@ -171,7 +173,7 @@ routing::Functors ClientImpl::InitialiseRoutingCallbacks() {
 
   functors.network_status = [this](const int&
                                    network_health) { OnNetworkStatusChange(network_health); };  // NOLINT
-  functors.matrix_changed = [this](std::shared_ptr<routing::MatrixChange> /*matrix_change*/) {};
+  functors.matrix_changed = [this](std::shared_ptr<routing::MatrixChange> /*matrix_change*/) {};  // NOLINT
   functors.request_public_key = [this](const NodeId& node_id,
                                        const routing::GivePublicKeyFunctor& give_key) {
       auto future_key(maid_node_nfs_->Get(passport::PublicPmid::Name(Identity(node_id.string())),

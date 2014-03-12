@@ -41,7 +41,6 @@ TEST(ClientTest, BEH_Constructor) {
   BootstrapInfo bootstrap_info;
   passport::Anmaid anmaid;
   passport::Maid maid(anmaid);
-  passport::Pmid pmid(maid);
   {
     Client client_new_account(maid, anmaid, bootstrap_info);
   }
@@ -54,12 +53,13 @@ TEST(ClientTest, BEH_RegisterVault) {
   BootstrapInfo bootstrap_info;
   passport::Anmaid anmaid;
   passport::Maid maid(anmaid);
-  passport::Pmid pmid(maid);
   {
     Client client_new_account(maid, anmaid, bootstrap_info);
   }
   std::cout << "joining existing account" << std::endl;
   Client client_existing_account(maid, bootstrap_info);
+  passport::Anpmid anpmid;
+  passport::Pmid pmid(anpmid);
   passport::PublicPmid public_pmid(pmid);
   std::cout << "put pmid public key on network " << HexSubstr(public_pmid.name()->string())
             << std::endl;
@@ -83,7 +83,6 @@ TEST(ClientTest, BEH_StartVault) {
   process_args.push_back(kVaultExePath.string());
   process_args.push_back(" --help");
   const auto kCommandLine = process::ConstructCommandLine(process_args);
-  std::cout << "kCommandLine : " << kCommandLine;
   boost::system::error_code error_code;
   bp::child child = bp::child(bp::execute(bp::initializers::run_exe(kVaultExePath),
                               bp::initializers::set_cmd_line(kCommandLine),
