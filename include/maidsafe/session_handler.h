@@ -141,6 +141,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
 
   auto put_future = client.Put(encrypted_serialised_session);
+  // FIXME Prakash
   put_future.get();
 
   try {
@@ -157,7 +158,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   }
 }
 
-// throw if session is already exist
+// throw if session already exists
 // this method should not be called when creating account with session handle construct
 template <typename Session>
 void SessionHandler<Session>::Login(UserCredentials&& user_credentials) {

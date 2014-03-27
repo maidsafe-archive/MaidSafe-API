@@ -18,6 +18,7 @@
 
 
 #include "maidsafe/detail/client_impl.h"
+#include "maidsafe/common/log.h"
 
 #include <string>
 #include <vector>
@@ -38,9 +39,8 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
-  std::cout << "calling InitRouting" << std::endl;
   InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
-  std::cout << "InitRouting  Done" << std::endl;
+  LOG(kInfo) << "Routing Initialised";
 }
 
 ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
@@ -56,17 +56,16 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME to be filled in by vault registration
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
-  std::cout << "calling InitRouting" << std::endl;
   InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
-  std::cout << "InitRouting  Done" << std::endl;
-  passport::PublicMaid public_maid(maid);
+  LOG(kInfo) << " Routing Initialised";
+  passport::PublicMaid public_maid(maid_);
   passport::PublicAnmaid public_anmaid(anmaid);
-  std::cout << "Calling   CreateAccount " << std::endl;
+  LOG(kInfo) << " Calling CreateAccount for maid name :"
+             << DebugId(public_maid.name());
   nfs_vault::AccountCreation account_creation(public_maid, public_anmaid);
   auto create_account_future = maid_node_nfs_->CreateAccount(account_creation);
-  std::cout << "waiting on create_account_future.get() " << std::endl;
   create_account_future.get();
-  std::cout << "Done on create_account_future.get() " << std::endl;
+  LOG(kInfo) << " CreateAccount for maid id :" << DebugId(public_maid.name()) << " succeded.";
 }
 
 Client::RegisterVaultFuture ClientImpl::RegisterVault(
@@ -76,14 +75,6 @@ Client::RegisterVaultFuture ClientImpl::RegisterVault(
   // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
   maid_node_nfs_->RegisterPmid(pmid_registration);
   return Client::RegisterVaultFuture();
-}
-
-Client::UnregisterVaultFuture ClientImpl::UnregisterVault(
-    const passport::PublicPmid::Name& pmid_name,
-    const std::chrono::steady_clock::duration& /*timeout*/) {
-  // TODO(Fraser#5#): 2014-02-24 - BEFORE_RELEASE - change nfs to take timeout & return correct type
-  maid_node_nfs_->UnregisterPmid(pmid_name);
-  return Client::UnregisterVaultFuture();
 }
 
 Client::OnNetworkHealthChange& ClientImpl::network_health_change_signal() {

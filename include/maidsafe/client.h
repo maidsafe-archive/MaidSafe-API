@@ -70,10 +70,6 @@ class Client {
   RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
       const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
 
-  // FIXME size ??
-  UnregisterVaultFuture UnregisterVault(const passport::PublicPmid::Name& pmid_name,
-      const std::chrono::steady_clock::duration& timeout = std::chrono::seconds(10));
-
   OnNetworkHealthChange& network_health_change_signal();
 
   //========================== Data accessors and mutators =========================================

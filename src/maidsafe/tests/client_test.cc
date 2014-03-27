@@ -44,7 +44,7 @@ TEST(ClientTest, BEH_Constructor) {
   {
     Client client_new_account(maid, anmaid, bootstrap_info);
   }
-  std::cout << "joining existing account" << std::endl;
+  LOG(kInfo) << "joining existing account";
   Client client_existing_account(maid, bootstrap_info);
 }
 

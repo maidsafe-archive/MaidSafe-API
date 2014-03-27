@@ -45,9 +45,6 @@ class ClientImpl {
   Client::RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
                                             const std::chrono::steady_clock::duration& timeout);
 
-  Client::UnregisterVaultFuture UnregisterVault(const passport::PublicPmid::Name& pmid_name,
-                                                const std::chrono::steady_clock::duration& timeout);
-
   Client::OnNetworkHealthChange& network_health_change_signal();
 
   Client::ImmutableDataFuture Get(const ImmutableData::Name& immutable_data_name,

@@ -37,12 +37,6 @@ Client::RegisterVaultFuture Client::RegisterVault(
   return pimpl_->RegisterVault(pmid, timeout);
 }
 
-Client::UnregisterVaultFuture Client::UnregisterVault(
-    const passport::PublicPmid::Name& pmid_name,
-    const std::chrono::steady_clock::duration& timeout) {
-  return pimpl_->UnregisterVault(pmid_name, timeout);
-}
-
 Client::OnNetworkHealthChange& Client::network_health_change_signal() {
   return pimpl_->network_health_change_signal();
 }
