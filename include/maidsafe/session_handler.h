@@ -103,13 +103,13 @@ Session DecryptSession(const UserCredentials& user_credential,
                        const ImmutableData& encrypted_session) {
   crypto::SecurePassword secure_password(CreateSecureTmidPassword(*user_credential.password,
                                                                   *user_credential.pin));
-  return Session(
-      Session::SerialisedType(XorData(
-          *user_credential.keyword,
-          *user_credential.pin,
-          *user_credential.password,
-          crypto::SymmDecrypt(encrypted_session.data(), SecureKey(secure_password),
-                              SecureIv(secure_password)))));
+  typename Session::SerialisedType serialised_session(XorData(
+      *user_credential.keyword,
+      *user_credential.pin,
+      *user_credential.password,
+      crypto::SymmDecrypt(encrypted_session.data(), SecureKey(secure_password),
+                          SecureIv(secure_password))).string());
+  return Session(serialised_session);
 }
 
 }  // namespace detail
@@ -138,22 +138,23 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   // TODO Validate credentials
   auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
                                                    *user_credentials_.pin));
+  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
-
-  auto put_future = client.Put(encrypted_serialised_session);
-  // FIXME Prakash
-  put_future.get();
-
   try {
+    LOG(kInfo) << "Put encrypted_serialised_session ";
+    auto put_future = client.Put(encrypted_serialised_session);
+    // put_future.get();   // FIXME Prakash
     auto create_version_tree_future = client.CreateVersionTree(
         MutableData::Name(session_location),
         StructuredDataVersions::VersionName(0, encrypted_serialised_session.name()),
         20,
         1);
     create_version_tree_future.get();
+    LOG(kInfo) << "create_version_tree succeded";
   } catch (const std::exception& e) {
     LOG(kError) << e.what();
     client.Delete(encrypted_serialised_session.name());
+    // TODO(Fraser) need to delete version tree here
     throw;
   }
 }
@@ -173,12 +174,16 @@ void SessionHandler<Session>::Login(UserCredentials&& user_credentials) {
 // destroy session getter if success
   auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
                                                    *user_credentials.pin));
+  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
   auto versions_future =
       session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
+  LOG(kInfo) << "waiting on versions_future";
   auto versions(versions_future.get());
+  LOG(kInfo) << "GetVersions from session location succeded ";
   assert(versions.size() == 1);
   auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
   auto encrypted_serialised_session(encrypted_serialised_session_future.get());
+  LOG(kInfo) << "Get encrypted_serialised_session succeded";
   session_.reset(new Session(detail::DecryptSession<Session>(user_credentials,
                                                              encrypted_serialised_session)));
   user_credentials_ = std::move(user_credentials);
