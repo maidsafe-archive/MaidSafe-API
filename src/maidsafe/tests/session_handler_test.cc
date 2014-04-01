@@ -104,7 +104,7 @@ TEST(SessionHandlerTest, BEH_Login) {
     LOG(kInfo) << "\n\n\n\n\n\n\n\n\n\n\n About to Login";
     session_handler.Login(std::move(GetUserCredentials()));
   } catch (std::exception& e) {
-    LOG(kError) << "Error on Login :" << e.what();
+    LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
   }
 }
 
