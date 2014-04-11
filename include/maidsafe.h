@@ -23,6 +23,5 @@
 #include "maidsafe/client.h"
 #include "maidsafe/encryptor.h"
 #include "maidsafe/session_handler.h"
-#include "maidsafe/user_credentials.h"
 
 #endif  // MAIDSAFE_MAIDSAFE_H_  NOLINT

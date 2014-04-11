@@ -20,37 +20,26 @@
 #define MAIDSAFE_SESSION_HANDLER_H_
 
 #include "maidsafe/client.h"
-#include "maidsafe/user_credentials.h"
 #include "maidsafe/detail/session_getter.h"
+#include "maidsafe/common/authentication/user_credentials.h"
+#include "maidsafe/common/authentication/user_credential_utils.h"
 
 namespace maidsafe {
 
 namespace detail {
 
-Identity GetSessionLocation(const passport::detail::Keyword& keyword,
-                            const passport::detail::Pin& pin);
+Identity GetSessionLocation(const authentication::UserCredentials::Keyword& keyword,
+                            const authentication::UserCredentials::Pin& pin);
 
 // friend of AnonymousSession
 // Update session here ?
 template <typename Session>
-ImmutableData EncryptSession(const UserCredentials& user_credential,
+ImmutableData EncryptSession(const authentication::UserCredentials& user_credentials,
                              Session& session);
 
 template <typename Session>
-Session DecryptSession(const UserCredentials& user_credential,
+Session DecryptSession(const authentication::UserCredentials& user_credentials,
                        const ImmutableData& encrypted_session);
-
-// TODO move to utility file
-crypto::SecurePassword CreateSecureTmidPassword(const passport::detail::Password& password,
-                                                const passport::detail::Pin& pin);
-
-// TODO move to utility file
-NonEmptyString XorData(const passport::detail::Keyword& keyword,
-                       const passport::detail::Pin& pin,
-                       const passport::detail::Password& password,
-                       const NonEmptyString& data);
-crypto::AES256Key SecureKey(const crypto::SecurePassword& secure_password);
-crypto::AES256InitialisationVector SecureIv(const crypto::SecurePassword& secure_password);
 
 }  // namespace detail
 
@@ -61,9 +50,10 @@ class SessionHandler {
   explicit SessionHandler(const BootstrapInfo& bootstrap_info);
   // Used for creating new account
   // throws if account can't be created on network
-  SessionHandler(Session&& session, Client& client, UserCredentials&& user_credentials);
+  SessionHandler(Session&& session, Client& client,
+                 authentication::UserCredentials&& user_credentials);
   // No need to login for new accounts
-  void Login(UserCredentials&& user_credentials);
+  void Login(authentication::UserCredentials&& user_credentials);
   // Saves session on the network using client
   void Save(Client& client);
 
@@ -72,7 +62,7 @@ class SessionHandler {
   std::unique_ptr<Session> session_;
   std::unique_ptr<detail::SessionGetter> session_getter_;
   // versions of session
-  UserCredentials user_credentials_;
+  authentication::UserCredentials user_credentials_;
 };
 
 
@@ -84,32 +74,27 @@ namespace detail {
 
 // Update session here ?
 template <typename Session>
-ImmutableData EncryptSession(const UserCredentials& user_credential,
+ImmutableData EncryptSession(const authentication::UserCredentials& user_credentials,
                              Session& session) {
-  auto serialised_session(session.Serialise().data);
+  NonEmptyString serialised_session{ session.Serialise().data };
 
-  crypto::SecurePassword secure_password(CreateSecureTmidPassword(*user_credential.password,
-                                                                  *user_credential.pin));
-  return ImmutableData(crypto::SymmEncrypt(XorData(*user_credential.keyword,
-                                                   *user_credential.pin,
-                                                   *user_credential.password,
-                                                   NonEmptyString(serialised_session)),
-                                           SecureKey(secure_password),
-                                           SecureIv(secure_password)));
+  crypto::SecurePassword secure_password{ authentication::CreateSecurePassword(user_credentials) };
+  return ImmutableData{ crypto::SymmEncrypt(
+      authentication::Obfuscate(user_credentials, serialised_session),
+      authentication::DeriveSymmEncryptKey(secure_password),
+      authentication::DeriveSymmEncryptIv(secure_password)).data };
 }
 
 template <typename Session>
-Session DecryptSession(const UserCredentials& user_credential,
+Session DecryptSession(const authentication::UserCredentials& user_credentials,
                        const ImmutableData& encrypted_session) {
-  crypto::SecurePassword secure_password(CreateSecureTmidPassword(*user_credential.password,
-                                                                  *user_credential.pin));
-  return Session(
-      Session::SerialisedType(XorData(
-          *user_credential.keyword,
-          *user_credential.pin,
-          *user_credential.password,
-          crypto::SymmDecrypt(encrypted_session.data(), SecureKey(secure_password),
-                              SecureIv(secure_password)))));
+  crypto::SecurePassword secure_password{ authentication::CreateSecurePassword(user_credentials) };
+  return Session{ Session::SerialisedType{
+      authentication::Obfuscate(
+          user_credentials,
+          crypto::SymmDecrypt(crypto::CipherText{ encrypted_session.data() },
+                              authentication::DeriveSymmEncryptKey(secure_password),
+                              authentication::DeriveSymmEncryptIv(secure_password))) } };
 }
 
 }  // namespace detail
@@ -130,7 +115,7 @@ SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
 // throws if failed to save session
 template <typename Session>
 SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
-                                        UserCredentials&& user_credentials)
+                                        authentication::UserCredentials&& user_credentials)
     : session_(new Session(std::move(session))),
       session_getter_(),  // Not reqired when creating account.
       user_credentials_(std::move(user_credentials)) {
@@ -161,10 +146,9 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
 // throw if session already exists
 // this method should not be called when creating account with session handle construct
 template <typename Session>
-void SessionHandler<Session>::Login(UserCredentials&& user_credentials) {
-  if (session_ != nullptr) {
+void SessionHandler<Session>::Login(authentication::UserCredentials&& user_credentials) {
+  if (session_)
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
-  }
 //  get session location
 //  get tip of tree
 //  assert vector size == 1 - this is latest version

@@ -35,11 +35,14 @@
 
 namespace maidsafe {
 
+namespace authentication { struct UserCredentials; }
 
 namespace test {
-  class AnonymousSessionTest_BEH_SaveAndLogin_Test;
-  class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
-}
+
+class AnonymousSessionTest_BEH_SaveAndLogin_Test;
+class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+
+}  // namespace test
 
 struct AnonymousSession {
   // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
@@ -60,10 +63,10 @@ struct AnonymousSession {
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
   template <typename Session>
-  friend ImmutableData detail::EncryptSession(const UserCredentials& user_credential,
-                                              Session& session);
+  friend ImmutableData detail::EncryptSession(
+      const authentication::UserCredentials& user_credentials, Session& session);
   template <typename Session>
-  friend Session detail::DecryptSession(const UserCredentials& user_credential,
+  friend Session detail::DecryptSession(const authentication::UserCredentials& user_credentials,
                                         const ImmutableData& encrypted_session);
   friend class test::AnonymousSessionTest_BEH_SaveAndLogin_Test;
   friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;

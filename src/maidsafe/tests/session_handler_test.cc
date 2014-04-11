@@ -22,7 +22,7 @@
 #include "maidsafe/routing/parameters.h"
 
 #include "maidsafe/anonymous_session.h"
-#include "maidsafe/user_credentials.h"
+#include "maidsafe/common/authentication/user_credentials.h"
 
 
 namespace maidsafe {
@@ -41,7 +41,7 @@ TEST(SessionHandlerTest, BEH_Constructor) {
     passport::Maid maid(anmaid);
     Client client(maid, anmaid, bootstrap_info);
     AnonymousSession session;
-    UserCredentials user_credentials;
+    authentication::UserCredentials user_credentials;
 
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
