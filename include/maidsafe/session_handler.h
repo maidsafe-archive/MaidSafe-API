@@ -89,7 +89,7 @@ template <typename Session>
 Session DecryptSession(const authentication::UserCredentials& user_credentials,
                        const ImmutableData& encrypted_session) {
   crypto::SecurePassword secure_password{ authentication::CreateSecurePassword(user_credentials) };
-  return Session{ Session::SerialisedType{
+  return Session{ typename Session::SerialisedType{
       authentication::Obfuscate(
           user_credentials,
           crypto::SymmDecrypt(crypto::CipherText{ encrypted_session.data() },
