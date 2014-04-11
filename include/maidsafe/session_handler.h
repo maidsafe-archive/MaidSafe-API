@@ -94,7 +94,7 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
           user_credentials,
           crypto::SymmDecrypt(crypto::CipherText{ encrypted_session.data() },
                               authentication::DeriveSymmEncryptKey(secure_password),
-                              authentication::DeriveSymmEncryptIv(secure_password))) } };
+                              authentication::DeriveSymmEncryptIv(secure_password))).string() } };
 }
 
 }  // namespace detail
@@ -123,22 +123,25 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   // TODO Validate credentials
   auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
                                                    *user_credentials_.pin));
+  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
-
-  auto put_future = client.Put(encrypted_serialised_session);
-  // FIXME Prakash
-  put_future.get();
-
+  LOG(kInfo) << " Immutable encrypted Session data name : "
+             << HexSubstr(encrypted_serialised_session.name()->string());
   try {
+    LOG(kInfo) << "Put encrypted_serialised_session ";
+    auto put_future = client.Put(encrypted_serialised_session);
+    // put_future.get();   // FIXME Prakash BEFORE_RELEASE
     auto create_version_tree_future = client.CreateVersionTree(
         MutableData::Name(session_location),
         StructuredDataVersions::VersionName(0, encrypted_serialised_session.name()),
         20,
         1);
     create_version_tree_future.get();
+    LOG(kInfo) << "Create Version tree";
   } catch (const std::exception& e) {
-    LOG(kError) << e.what();
+    LOG(kError) << "Failed to store session. " << boost::diagnostic_information(e);
     client.Delete(encrypted_serialised_session.name());
+    // TODO(Fraser) BEFORE_RELEASE need to delete version tree here
     throw;
   }
 }
@@ -157,12 +160,16 @@ void SessionHandler<Session>::Login(authentication::UserCredentials&& user_crede
 // destroy session getter if success
   auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
                                                    *user_credentials.pin));
+  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
   auto versions_future =
       session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
+  LOG(kInfo) << "waiting on versions_future";
   auto versions(versions_future.get());
+  LOG(kInfo) << "GetVersions from session location succeded ";
   assert(versions.size() == 1);
   auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
   auto encrypted_serialised_session(encrypted_serialised_session_future.get());
+  LOG(kInfo) << "Get encrypted_serialised_session succeded";
   session_.reset(new Session(detail::DecryptSession<Session>(user_credentials,
                                                              encrypted_serialised_session)));
   user_credentials_ = std::move(user_credentials);
@@ -185,7 +192,7 @@ void SessionHandler<Session>::Save(Client& client) {
 //    auto put_version_future = client.PutVersion();  // FIXME
 //    put_version_future.get();
   } catch (const std::exception& e) {
-    LOG(kError) << e.what();
+    LOG(kError) << boost::diagnostic_information(e);
     client.Delete(encrypted_serialised_session.name());
     throw;
   }

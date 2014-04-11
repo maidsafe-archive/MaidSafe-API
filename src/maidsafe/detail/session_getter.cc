@@ -28,7 +28,7 @@ SessionGetter::SessionGetter(const BootstrapInfo& bootstrap_info)
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
-      routing_(NodeId(NodeId::kRandomId)),
+      routing_(),
       data_getter_(),  // deferred construction until asio service is created
       public_pmid_helper_(),
       asio_service_(2) {
