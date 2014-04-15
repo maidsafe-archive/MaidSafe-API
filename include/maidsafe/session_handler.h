@@ -73,10 +73,12 @@ class SessionHandler {
 namespace detail {
 
 // Update session here ?
+// TODO(Team) : Need to finalise if we are concatenating encrypted passport to encrypted session
+// Or encrypt the whole session including encrypted passport
 template <typename Session>
 ImmutableData EncryptSession(const authentication::UserCredentials& user_credentials,
                              Session& session) {
-  NonEmptyString serialised_session{ session.Serialise().data };
+  NonEmptyString serialised_session{ session.Serialise(user_credentials).data };
 
   crypto::SecurePassword secure_password{ authentication::CreateSecurePassword(user_credentials) };
   return ImmutableData{ crypto::SymmEncrypt(
@@ -94,7 +96,8 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
           user_credentials,
           crypto::SymmDecrypt(crypto::CipherText{ encrypted_session.data() },
                               authentication::DeriveSymmEncryptKey(secure_password),
-                              authentication::DeriveSymmEncryptIv(secure_password))).string() } };
+                              authentication::DeriveSymmEncryptIv(secure_password))).string() },
+        user_credentials };
 }
 
 }  // namespace detail
@@ -137,7 +140,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
         20,
         1);
     create_version_tree_future.get();
-    LOG(kInfo) << "Create Version tree";
+    LOG(kInfo) << "Created Version tree";
   } catch (const std::exception& e) {
     LOG(kError) << "Failed to store session. " << boost::diagnostic_information(e);
     client.Delete(encrypted_serialised_session.name());

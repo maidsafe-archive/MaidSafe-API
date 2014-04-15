@@ -26,6 +26,7 @@
 #include "boost/asio/ip/address.hpp"
 #include "boost/date_time/posix_time/ptime.hpp"
 
+#include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/common/config.h"
 #include "maidsafe/common/tagged_value.h"
 #include "maidsafe/common/types.h"
@@ -76,10 +77,11 @@ struct AnonymousSession {
 
   // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
   // struct.  Throws on error.
-  SerialisedType Serialise();
+  SerialisedType Serialise(const authentication::UserCredentials& user_credentials);
 
   // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
-  explicit AnonymousSession(SerialisedType serialised_session);
+  explicit AnonymousSession(SerialisedType serialised_session,
+                            const authentication::UserCredentials &user_credentials);
 };
 
 void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;

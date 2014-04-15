@@ -18,48 +18,33 @@
 
 #include "maidsafe/session_handler.h"
 
+#include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/test.h"
+
 #include "maidsafe/routing/parameters.h"
 
 #include "maidsafe/anonymous_session.h"
 #include "maidsafe/common/authentication/user_credentials.h"
-
+#include "maidsafe/tests/test_utils.h"
 
 namespace maidsafe {
 
 namespace test {
 
-authentication::UserCredentials GetUserCredentials() {
-  authentication::UserCredentials user_credentials;
-  user_credentials.keyword.reset(new authentication::UserCredentials::Keyword());
-  user_credentials.keyword->Insert(0, 'k');
-  user_credentials.keyword->Insert(1, 'e');
-  user_credentials.keyword->Insert(2, 'y');
-  user_credentials.keyword->Insert(3, 'w');
-  user_credentials.keyword->Insert(4, 'o');
-  user_credentials.keyword->Insert(5, 'r');
-  user_credentials.keyword->Insert(6, 'd');
-  user_credentials.keyword->Finalise();
 
-  user_credentials.pin.reset(new authentication::UserCredentials::Pin());
-  user_credentials.pin->Insert(0, '1');
-  user_credentials.pin->Insert(1, '2');
-  user_credentials.pin->Insert(2, '3');
-  user_credentials.pin->Insert(3, '4');
-  user_credentials.pin->Finalise();
+struct TestSession {
+  typedef TaggedValue<std::string, struct AnonymousSessiontag> SerialisedType;
+  SerialisedType Serialise(const authentication::UserCredentials&) {
+    return SerialisedType(session_string);
+  }
 
-  user_credentials.password.reset(new authentication::UserCredentials::Password());
-  user_credentials.password->Insert(0, 'p');
-  user_credentials.password->Insert(1, 'a');
-  user_credentials.password->Insert(2, 's');
-  user_credentials.password->Insert(3, 's');
-  user_credentials.password->Insert(3, 'w');
-  user_credentials.password->Insert(3, 'o');
-  user_credentials.password->Insert(3, 'r');
-  user_credentials.password->Insert(3, 'd');
-  user_credentials.password->Finalise();
-  return user_credentials;
-}
+  TestSession() : session_string(RandomString(
+                                     (RandomInt32() % routing::Parameters::max_data_size) + 1U)) {}
+  explicit TestSession(SerialisedType serialised_session, const authentication::UserCredentials&)
+      : session_string(serialised_session.data) {}
+
+  std::string session_string;
+};
 
 // Pre-condition : Need a Vault network running
 TEST(SessionHandlerTest, BEH_Constructor) {
@@ -76,22 +61,52 @@ TEST(SessionHandlerTest, BEH_Constructor) {
     passport::Maid maid(anmaid);
     Client client(maid, anmaid, bootstrap_info);
     AnonymousSession session;
-    authentication::UserCredentials user_credentials(GetUserCredentials());
+    authentication::UserCredentials user_credentials(GetRandomUserCredentials());
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
+  }
+}
+
+TEST(SessionHandlerTest, BEH_EncryptDecrypt) {
+  for (int i (0); i < 20; ++i) {
+    TestSession session;
+    authentication::UserCredentials user_credentials(GetRandomUserCredentials());
+    ImmutableData encrypted_session = maidsafe::detail::EncryptSession(user_credentials, session);
+    TestSession decrypted_session =
+        maidsafe::detail::DecryptSession<TestSession>(user_credentials, encrypted_session);
+    EXPECT_TRUE(decrypted_session.session_string == session.session_string);
+  }
+}
+
+TEST(SessionHandlerTest, BEH_EncryptDecryptAnonymousSession) {
+  for (int i (0); i < 20; ++i) {
+    AnonymousSession session;
+    authentication::UserCredentials user_credentials(GetRandomUserCredentials());
+    ImmutableData encrypted_session = maidsafe::detail::EncryptSession(user_credentials, session);
+    AnonymousSession decrypted_session =
+        maidsafe::detail::DecryptSession<AnonymousSession>(user_credentials, encrypted_session);
+  //  TODO(Prkash) Check passport keys
+
+    EXPECT_TRUE(decrypted_session.passport->GetMaid().name() == session.passport->GetMaid().name());
+    EXPECT_TRUE(decrypted_session.timestamp == session.timestamp);
+    EXPECT_TRUE(decrypted_session.ip == session.ip);
+    EXPECT_TRUE(decrypted_session.port == session.port);
+    EXPECT_TRUE(decrypted_session.unique_user_id == session.unique_user_id);
+    EXPECT_TRUE(decrypted_session.root_parent_id == session.root_parent_id);
   }
 }
 
 TEST(SessionHandlerTest, BEH_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   LOG(kInfo) << "Creating new account";
   {
     passport::Anmaid anmaid;
     passport::Maid maid(anmaid);
     Client client(maid, anmaid, bootstrap_info);
     AnonymousSession session;
-    authentication::UserCredentials user_credentials(GetUserCredentials());
+    authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
   }
@@ -101,7 +116,8 @@ TEST(SessionHandlerTest, BEH_Login) {
     SessionHandler<AnonymousSession> session_handler(bootstrap_info);
     Sleep(std::chrono::seconds(12));
     LOG(kInfo) << "\n\n\n\n\n\n\n\n\n\n\n About to Login";
-    session_handler.Login(std::move(GetUserCredentials()));
+    authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
+    session_handler.Login(std::move(user_credentials));
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
   }

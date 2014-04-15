@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "maidsafe/common/error.h"
+#include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/utils.h"
 
 #include "maidsafe/anonymous_session.pb.h"
@@ -28,16 +29,17 @@
 namespace maidsafe {
 
 AnonymousSession::AnonymousSession()
-    : passport(new passport::Passport()), timestamp(), ip(), port(0), unique_user_id(),
-      root_parent_id() {}
+    : passport(maidsafe::make_unique<passport::Passport>(passport::CreateMaidAndSigner())),
+      timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {}
 
-AnonymousSession::AnonymousSession(SerialisedType serialised_session)
+AnonymousSession::AnonymousSession(SerialisedType serialised_session,
+                                   const authentication::UserCredentials& user_credentials)
     : passport(), timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {
   protobuf::AnonymousSession proto_session;
   if (!proto_session.ParseFromString(serialised_session))
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::parsing_error));
-
-  passport.reset(new passport::Passport(NonEmptyString(proto_session.serialised_passport())));
+  crypto::CipherText encrypted_passport(NonEmptyString(proto_session.serialised_passport()));
+  passport = maidsafe::make_unique<passport::Passport>(encrypted_passport, user_credentials);
   timestamp = TimeStampToPtime(proto_session.timestamp());
   ip = boost::asio::ip::address::from_string(proto_session.ip());
   port = static_cast<uint16_t>(proto_session.port());
@@ -60,9 +62,10 @@ AnonymousSession& AnonymousSession::operator=(AnonymousSession other) {
   return *this;
 }
 
-AnonymousSession::SerialisedType AnonymousSession::Serialise() {
+AnonymousSession::SerialisedType AnonymousSession::Serialise(
+    const authentication::UserCredentials& user_credentials) {
   protobuf::AnonymousSession proto_session;
-  proto_session.set_serialised_passport(passport->Serialise().string());
+  proto_session.set_serialised_passport(passport->Encrypt(user_credentials)->string());
   proto_session.set_timestamp(GetTimeStamp());
   proto_session.set_ip(ip.to_string());
   proto_session.set_port(port);
