@@ -33,7 +33,8 @@ SessionGetter::SessionGetter(const BootstrapInfo& bootstrap_info)
       public_pmid_helper_(),
       asio_service_(2) {
   data_getter_.reset(new nfs_client::DataGetter(asio_service_, routing_));
-  InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  InitRouting(bootstrap_info);
 }
 
 void SessionGetter::InitRouting(const BootstrapInfo& bootstrap_info) {
@@ -74,7 +75,8 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
   functors.typed_message_and_caching.single_to_single.message_received = [this](
       const routing::SingleToSingleMessage& /*message*/) {};  // NOLINT
 
-// TODO fix routing asserts for clients so client need not to provide callbacks for all functors
+// TODO(Prakash) fix routing asserts for clients so client need not to provide callbacks for all
+// functors
   functors.typed_message_and_caching.single_to_group.message_received = [this](
       const routing::SingleToGroupMessage& /*message*/) {};  // NOLINT
   functors.typed_message_and_caching.group_to_group.message_received = [this](

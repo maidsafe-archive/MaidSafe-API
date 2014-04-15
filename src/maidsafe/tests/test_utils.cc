@@ -18,6 +18,8 @@
 
 #include "maidsafe/tests/test_utils.h"
 
+#include <string>
+
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/utils.h"

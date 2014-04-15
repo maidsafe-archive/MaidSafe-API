@@ -16,9 +16,10 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_API_TESTS_TEST_UTILS_H_
-#define MAIDSAFE_API_TESTS_TEST_UTILS_H_
+#ifndef MAIDSAFE_TESTS_TEST_UTILS_H_
+#define MAIDSAFE_TESTS_TEST_UTILS_H_
 
+#include <string>
 #include <tuple>
 
 #include "maidsafe/common/authentication/user_credentials.h"
@@ -38,4 +39,4 @@ authentication::UserCredentials MakeUserCredentials(
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_API_TESTS_TEST_UTILS_H_
+#endif  // MAIDSAFE_TESTS_TEST_UTILS_H_

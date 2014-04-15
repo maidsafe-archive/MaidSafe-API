@@ -19,6 +19,8 @@
 #ifndef MAIDSAFE_SESSION_HANDLER_H_
 #define MAIDSAFE_SESSION_HANDLER_H_
 
+#include <string>
+
 #include "maidsafe/client.h"
 #include "maidsafe/detail/session_getter.h"
 #include "maidsafe/common/authentication/user_credentials.h"
@@ -123,7 +125,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
       session_getter_(),  // Not reqired when creating account.
       user_credentials_(std::move(user_credentials)) {
   // throw if client & session are not coherent
-  // TODO Validate credentials
+  // TODO(Prakash) Validate credentials
   auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
                                                    *user_credentials_.pin));
   LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));

@@ -85,7 +85,7 @@ TEST(SessionHandlerTest, BEH_EncryptDecryptAnonymousSession) {
     ImmutableData encrypted_session = maidsafe::detail::EncryptSession(user_credentials, session);
     AnonymousSession decrypted_session =
         maidsafe::detail::DecryptSession<AnonymousSession>(user_credentials, encrypted_session);
-  //  TODO(Prkash) Check passport keys
+    // TODO(Prkash) Check passport keys
 
     EXPECT_TRUE(decrypted_session.passport->GetMaid().name() == session.passport->GetMaid().name());
     EXPECT_TRUE(decrypted_session.timestamp == session.timestamp);

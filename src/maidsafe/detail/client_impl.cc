@@ -18,10 +18,11 @@
 
 
 #include "maidsafe/detail/client_impl.h"
-#include "maidsafe/common/log.h"
 
 #include <string>
 #include <vector>
+
+#include "maidsafe/common/log.h"
 
 namespace maidsafe {
 
@@ -39,7 +40,8 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
-  InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  InitRouting(bootstrap_info);
   LOG(kInfo) << "Routing Initialised";
 }
 
@@ -56,7 +58,8 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
       asio_service_(2) {
   passport::PublicPmid::Name pmid_name;  // FIXME to be filled in by vault registration
   maid_node_nfs_.reset(new nfs_client::MaidNodeNfs(asio_service_, routing_, pmid_name));
-  InitRouting(bootstrap_info);  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  // FIXME need to update routing to get bootstrap endpoints along with public keys
+  InitRouting(bootstrap_info);
   LOG(kInfo) << " Routing Initialised";
   passport::PublicMaid public_maid(maid_);
   passport::PublicAnmaid public_anmaid(anmaid);
