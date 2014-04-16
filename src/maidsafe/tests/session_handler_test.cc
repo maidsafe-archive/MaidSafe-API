@@ -99,8 +99,8 @@ TEST(SessionHandlerTest, BEH_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  LOG(kInfo) << "Creating new account";
   {
+    LOG(kInfo) << "SessionHandlerTest  -- Creating new account --";
     auto maid_and_signer(passport::CreateMaidAndSigner());
     Client client(maid_and_signer, bootstrap_info);
     AnonymousSession session;
@@ -108,14 +108,13 @@ TEST(SessionHandlerTest, BEH_Login) {
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
   }
-  LOG(kInfo) << "\n\n\n\n\n\n\n\n\n\n\nSession Handler Login for existing account";
-
   try {
+    LOG(kInfo) << "SessionHandlerTest  -- Login for existing account --";
     SessionHandler<AnonymousSession> session_handler(bootstrap_info);
-    Sleep(std::chrono::seconds(12));
-    LOG(kInfo) << "\n\n\n\n\n\n\n\n\n\n\n About to Login";
+    LOG(kInfo) << "About to Login .. ";
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     session_handler.Login(std::move(user_credentials));
+    LOG(kInfo) << "Login successful !";
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
   }
