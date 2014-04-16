@@ -28,8 +28,8 @@
 
 namespace maidsafe {
 
-AnonymousSession::AnonymousSession()
-    : passport(maidsafe::make_unique<passport::Passport>(passport::CreateMaidAndSigner())),
+AnonymousSession::AnonymousSession(const passport::MaidAndSigner& maid_and_signer)
+    : passport(maidsafe::make_unique<passport::Passport>(maid_and_signer)),
       timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {}
 
 AnonymousSession::AnonymousSession(SerialisedType serialised_session,

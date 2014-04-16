@@ -59,7 +59,7 @@ TEST(SessionHandlerTest, BEH_Constructor) {
   {
     auto maid_and_signer(passport::CreateMaidAndSigner());
     Client client(maid_and_signer, bootstrap_info);
-    AnonymousSession session;
+    AnonymousSession session(maid_and_signer);
     authentication::UserCredentials user_credentials(GetRandomUserCredentials());
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
@@ -79,7 +79,7 @@ TEST(SessionHandlerTest, BEH_EncryptDecrypt) {
 
 TEST(SessionHandlerTest, BEH_EncryptDecryptAnonymousSession) {
   for (int i (0); i < 20; ++i) {
-    AnonymousSession session;
+    AnonymousSession session(passport::CreateMaidAndSigner());
     authentication::UserCredentials user_credentials(GetRandomUserCredentials());
     ImmutableData encrypted_session = maidsafe::detail::EncryptSession(user_credentials, session);
     AnonymousSession decrypted_session =
@@ -99,11 +99,11 @@ TEST(SessionHandlerTest, BEH_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  auto maid_and_signer(passport::CreateMaidAndSigner());
   {
     LOG(kInfo) << "SessionHandlerTest  -- Creating new account --";
-    auto maid_and_signer(passport::CreateMaidAndSigner());
     Client client(maid_and_signer, bootstrap_info);
-    AnonymousSession session;
+    AnonymousSession session(maid_and_signer);
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
                                                      std::move(user_credentials));
@@ -115,8 +115,13 @@ TEST(SessionHandlerTest, BEH_Login) {
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     session_handler.Login(std::move(user_credentials));
     LOG(kInfo) << "Login successful !";
+    ASSERT_TRUE(maid_and_signer.first.name() ==
+                session_handler.session().passport->GetMaid().name());
+    Client client(session_handler.session().passport->GetMaid(), bootstrap_info);
+    LOG(kInfo) << "Client connection to account successful !";
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
+    ASSERT_TRUE(false);
   }
 }
 

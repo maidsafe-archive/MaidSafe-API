@@ -33,8 +33,8 @@ namespace test {
 TEST(AnonymousSessionTest, BEH_Create) {
   std::unique_ptr<AnonymousSession> session;
   authentication::UserCredentials user_credentials(GetRandomUserCredentials());
-  // Default construct AnonymousSession
-  EXPECT_NO_THROW(session.reset(new AnonymousSession));
+  // construct AnonymousSession
+  EXPECT_NO_THROW(session.reset(new AnonymousSession(passport::CreateMaidAndSigner())));
 
   // Check session contents have been initialised as expected
   EXPECT_NO_THROW(session->passport->Encrypt(user_credentials));
@@ -47,7 +47,7 @@ TEST(AnonymousSessionTest, BEH_Create) {
 
 // Tests serialising function and parsing constructor.
 TEST(AnonymousSessionTest, BEH_SaveAndLogin) {
-  AnonymousSession session0;
+  AnonymousSession session0(passport::CreateMaidAndSigner());
   AnonymousSession::SerialisedType serialised_session0;
   authentication::UserCredentials user_credentials(GetRandomUserCredentials());
 
@@ -96,7 +96,7 @@ TEST(AnonymousSessionTest, BEH_SaveAndLogin) {
 }
 
 TEST(AnonymousSessionTest, BEH_MoveConstructAndAssign) {
-  AnonymousSession initial_session;
+  AnonymousSession initial_session(passport::CreateMaidAndSigner());
   authentication::UserCredentials user_credentials(GetRandomUserCredentials());
   initial_session.Serialise(user_credentials);  // to set timestamp
   const crypto::CipherText encrypted_passport(initial_session.passport->Encrypt(user_credentials));
@@ -118,7 +118,7 @@ TEST(AnonymousSessionTest, BEH_MoveConstructAndAssign) {
   EXPECT_EQ(unique_user_id, moved_to_session.unique_user_id);
   EXPECT_EQ(root_parent_id, moved_to_session.root_parent_id);
 
-  AnonymousSession assigned_to_session;
+  AnonymousSession assigned_to_session(passport::CreateMaidAndSigner());
   assigned_to_session = std::move(moved_to_session);
   EXPECT_EQ(encrypted_passport, assigned_to_session.passport->Encrypt(user_credentials));
   EXPECT_EQ(timestamp, assigned_to_session.timestamp);

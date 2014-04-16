@@ -51,7 +51,7 @@ struct AnonymousSession {
 
   // Used when creating a new user account.  Creates a new default-constructed passport.  Throws on
   // error.
-  AnonymousSession();
+  explicit AnonymousSession(const passport::MaidAndSigner& maid_and_signer);
 
   // Move-constructible and move-assignable only
   AnonymousSession(AnonymousSession&& other);

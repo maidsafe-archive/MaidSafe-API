@@ -139,9 +139,7 @@ void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
   std::vector<boost::asio::ip::udp::endpoint> peer_endpoints;
   for (const auto& i : bootstrap_info)
     peer_endpoints.push_back(i.first);
-  std::cout << "Before Routing Join";
   routing_.Join(functors, peer_endpoints);
-  std::cout << "After Routing Join";
   std::unique_lock<std::mutex> lock(network_health_mutex_);
   // FIXME BEFORE_RELEASE discuss this
   // This should behave differently. In case of new maid account, it should timeout

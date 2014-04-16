@@ -59,8 +59,11 @@ class SessionHandler {
   // Saves session on the network using client
   void Save(Client& client);
 
+  Session& session();
+
  private:
   ImmutableData EncryptSession();
+
   std::unique_ptr<Session> session_;
   std::unique_ptr<detail::SessionGetter> session_getter_;
   // versions of session
@@ -157,12 +160,7 @@ template <typename Session>
 void SessionHandler<Session>::Login(authentication::UserCredentials&& user_credentials) {
   if (session_)
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
-//  get session location
-//  get tip of tree
-//  assert vector size == 1 - this is latest version
-//  get immutable data with name as per version name
-//  decrypt immutable data
-// destroy session getter if success
+
   auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
                                                    *user_credentials.pin));
   LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
@@ -189,7 +187,7 @@ void SessionHandler<Session>::Save(Client& client) {
 //    relpace current version name with new one
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
   auto put_future = client.Put(encrypted_serialised_session);
-  put_future.get();
+//  put_future.get();  // FIXME Prakash BEFORE_RELEASE
 
   try {
     auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
@@ -201,6 +199,12 @@ void SessionHandler<Session>::Save(Client& client) {
     client.Delete(encrypted_serialised_session.name());
     throw;
   }
+}
+
+template <typename Session>
+Session& SessionHandler<Session>::session() {
+  assert(session_);
+  return *session_;
 }
 
 }  // namespace maidsafe
