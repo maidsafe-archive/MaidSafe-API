@@ -73,7 +73,7 @@ struct AnonymousSession {
   friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
 
  private:
-  AnonymousSession(const AnonymousSession&) MAIDSAFE_DELETE;
+  AnonymousSession(const AnonymousSession&) = delete;
 
   // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
   // struct.  Throws on error.
