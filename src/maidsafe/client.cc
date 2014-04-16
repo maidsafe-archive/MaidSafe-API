@@ -25,9 +25,8 @@ Client::Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info)
     : pimpl_(new detail::ClientImpl(maid, bootstrap_info)) {}
 
 
-Client::Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
-               const BootstrapInfo& bootstrap_info)
-    : pimpl_(new detail::ClientImpl(maid, anmaid, bootstrap_info)) {}
+Client::Client(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info)
+    : pimpl_(new detail::ClientImpl(maid_and_signer, bootstrap_info)) {}
 
 Client::~Client() {}
 

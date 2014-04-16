@@ -57,9 +57,8 @@ TEST(SessionHandlerTest, BEH_Constructor) {
 
   LOG(kInfo) << "Session Handler for new account";
   {
-    passport::Anmaid anmaid;
-    passport::Maid maid(anmaid);
-    Client client(maid, anmaid, bootstrap_info);
+    auto maid_and_signer(passport::CreateMaidAndSigner());
+    Client client(maid_and_signer, bootstrap_info);
     AnonymousSession session;
     authentication::UserCredentials user_credentials(GetRandomUserCredentials());
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,
@@ -102,9 +101,8 @@ TEST(SessionHandlerTest, BEH_Login) {
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   LOG(kInfo) << "Creating new account";
   {
-    passport::Anmaid anmaid;
-    passport::Maid maid(anmaid);
-    Client client(maid, anmaid, bootstrap_info);
+    auto maid_and_signer(passport::CreateMaidAndSigner());
+    Client client(maid_and_signer, bootstrap_info);
     AnonymousSession session;
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     SessionHandler<AnonymousSession> session_handler(std::move(session), client,

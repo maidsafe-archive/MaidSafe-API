@@ -45,13 +45,13 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
   LOG(kInfo) << "Routing Initialised";
 }
 
-ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
+ClientImpl::ClientImpl(const passport::MaidAndSigner& maid_and_signer,
                        const BootstrapInfo& bootstrap_info)
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
       network_health_change_signal_(),
-      maid_(maid),
+      maid_(maid_and_signer.first),
       routing_(maid_),
       maid_node_nfs_(),  // deferred construction until asio service is created
       public_pmid_helper_(),
@@ -62,7 +62,7 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmai
   InitRouting(bootstrap_info);
   LOG(kInfo) << " Routing Initialised";
   passport::PublicMaid public_maid(maid_);
-  passport::PublicAnmaid public_anmaid(anmaid);
+  passport::PublicAnmaid public_anmaid(maid_and_signer.second);
   LOG(kInfo) << " Calling CreateAccount for maid name :"
              << DebugId(public_maid.name());
   nfs_vault::AccountCreation account_creation(public_maid, public_anmaid);

@@ -39,25 +39,23 @@ namespace bp = boost::process;
 TEST(ClientTest, BEH_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
-  passport::Anmaid anmaid;
-  passport::Maid maid(anmaid);
+  auto maid_and_signer(passport::CreateMaidAndSigner());
   {
-    Client client_new_account(maid, anmaid, bootstrap_info);
+    Client client_new_account(maid_and_signer, bootstrap_info);
   }
   LOG(kInfo) << "joining existing account";
-  Client client_existing_account(maid, bootstrap_info);
+  Client client_existing_account(maid_and_signer.first, bootstrap_info);
 }
 
 TEST(ClientTest, BEH_RegisterVault) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
-  passport::Anmaid anmaid;
-  passport::Maid maid(anmaid);
+  auto maid_and_signer(passport::CreateMaidAndSigner());
   {
-    Client client_new_account(maid, anmaid, bootstrap_info);
+    Client client_new_account(maid_and_signer, bootstrap_info);
   }
   std::cout << "joining existing account" << std::endl;
-  Client client_existing_account(maid, bootstrap_info);
+  Client client_existing_account(maid_and_signer.first, bootstrap_info);
   passport::Anpmid anpmid;
   passport::Pmid pmid(anpmid);
   passport::PublicPmid public_pmid(pmid);

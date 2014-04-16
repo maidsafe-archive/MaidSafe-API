@@ -31,6 +31,7 @@
 #include "maidsafe/common/data_types/mutable_data.h"
 #include "maidsafe/common/data_types/structured_data_versions.h"
 
+#include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
 
 
@@ -61,8 +62,7 @@ class Client {
 
   // For new accounts
   // throws on failure to create account
-  Client(const passport::Maid& maid, const passport::Anmaid& anmaid,
-         const BootstrapInfo& bootstrap_info);
+  Client(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info);
 
   ~Client();
 

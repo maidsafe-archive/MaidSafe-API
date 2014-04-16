@@ -39,8 +39,7 @@ class ClientImpl {
  public:
   ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
 
-  ClientImpl(const passport::Maid& maid, const passport::Anmaid& anmaid,
-             const BootstrapInfo& bootstrap_info);
+  ClientImpl(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info);
 
   Client::RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
                                             const std::chrono::steady_clock::duration& timeout);
