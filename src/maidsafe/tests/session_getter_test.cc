@@ -30,7 +30,7 @@ namespace test {
 
 // Pre-condition : Need a Vault network running
 
-TEST(SessionGetterTest, BEH_Constructor) {
+TEST(SessionGetterTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   {

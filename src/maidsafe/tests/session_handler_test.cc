@@ -47,7 +47,7 @@ struct TestSession {
 };
 
 // Pre-condition : Need a Vault network running
-TEST(SessionHandlerTest, BEH_Constructor) {
+TEST(SessionHandlerTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   LOG(kInfo) << "Session Handler for exisiting account";
@@ -95,7 +95,7 @@ TEST(SessionHandlerTest, BEH_EncryptDecryptAnonymousSession) {
   }
 }
 
-TEST(SessionHandlerTest, BEH_Login) {
+TEST(SessionHandlerTest, FUNC_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
@@ -119,6 +119,41 @@ TEST(SessionHandlerTest, BEH_Login) {
                 session_handler.session().passport->GetMaid().name());
     Client client(session_handler.session().passport->GetMaid(), bootstrap_info);
     LOG(kInfo) << "Client connection to account successful !";
+  } catch (std::exception& e) {
+    LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
+    ASSERT_TRUE(false);
+  }
+}
+
+TEST(SessionHandlerTest, FUNC_Save) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  BootstrapInfo bootstrap_info;
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  auto maid_and_signer(passport::CreateMaidAndSigner());
+  {
+    LOG(kInfo) << "SessionHandlerTest  -- Creating new account --";
+    Client client(maid_and_signer, bootstrap_info);
+    AnonymousSession session(maid_and_signer);
+    authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
+    SessionHandler<AnonymousSession> session_handler(std::move(session), client,
+                                                     std::move(user_credentials));
+  }
+  try {
+    LOG(kInfo) << "SessionHandlerTest  -- Login for existing account --";
+    SessionHandler<AnonymousSession> session_handler(bootstrap_info);
+    LOG(kInfo) << "About to Login .. ";
+    authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
+    session_handler.Login(std::move(user_credentials));
+    LOG(kInfo) << "Login successful !";
+    ASSERT_TRUE(maid_and_signer.first.name() ==
+                session_handler.session().passport->GetMaid().name());
+    Client client(session_handler.session().passport->GetMaid(), bootstrap_info);
+    LOG(kInfo) << "Client connection to account successful !";
+    LOG(kInfo) << "SessionHandlerTest  -- Saving Session --";
+    for (int i(0); i != 10; ++i) {
+      session_handler.Save(client);
+      LOG(kInfo) << "Save session successful !";
+    }
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
     ASSERT_TRUE(false);

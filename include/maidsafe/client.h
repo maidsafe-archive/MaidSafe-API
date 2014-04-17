@@ -40,7 +40,7 @@
 
 namespace maidsafe {
 namespace test {
-  class ClientTest_BEH_RegisterVault_Test;
+  class ClientTest_FUNC_RegisterVault_Test;
 }
 
 namespace detail { class ClientImpl; }
@@ -108,7 +108,7 @@ class Client {
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
 
-  friend class test::ClientTest_BEH_RegisterVault_Test;
+  friend class test::ClientTest_FUNC_RegisterVault_Test;
 
  private:
   std::unique_ptr<detail::ClientImpl> pimpl_;

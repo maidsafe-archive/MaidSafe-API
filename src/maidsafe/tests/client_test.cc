@@ -36,7 +36,7 @@ namespace test {
 namespace bp = boost::process;
 
 // Pre-condition : Need a Vault network running
-TEST(ClientTest, BEH_Constructor) {
+TEST(ClientTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   auto maid_and_signer(passport::CreateMaidAndSigner());
@@ -47,7 +47,7 @@ TEST(ClientTest, BEH_Constructor) {
   Client client_existing_account(maid_and_signer.first, bootstrap_info);
 }
 
-TEST(ClientTest, BEH_RegisterVault) {
+TEST(ClientTest, FUNC_RegisterVault) {
   routing::Parameters::append_local_live_port_endpoint = true;
   BootstrapInfo bootstrap_info;
   auto maid_and_signer(passport::CreateMaidAndSigner());
@@ -70,24 +70,6 @@ TEST(ClientTest, BEH_RegisterVault) {
   client_existing_account.RegisterVault(pmid);
   std::this_thread::sleep_for(std::chrono::seconds(5));
   // need to start a Vault now to Put data on network
-}
-
-// Pre-condition : Need a Vault network running
-// FIXME: This test will need Vault Manager to pass pmid keys to Vaults via tcp
-TEST(ClientTest, BEH_StartVault) {
-  const auto kVaultExePath = process::GetOtherExecutablePath(boost::filesystem::path("vault"));
-  std::cout << "vault_exe_path : " << kVaultExePath.string();
-  std::vector<std::string> process_args;
-  process_args.push_back(kVaultExePath.string());
-  process_args.push_back(" --help");
-  const auto kCommandLine = process::ConstructCommandLine(process_args);
-  boost::system::error_code error_code;
-  bp::child child = bp::child(bp::execute(bp::initializers::run_exe(kVaultExePath),
-                              bp::initializers::set_cmd_line(kCommandLine),
-                              bp::initializers::set_on_error(error_code)));
-  ASSERT_FALSE(error_code);
-//  int exit_code(99);
-  /*exit_code =*/ wait_for_exit(child, error_code);
 }
 
 }  // namespace test
