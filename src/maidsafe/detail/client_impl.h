@@ -19,19 +19,29 @@
 #ifndef MAIDSAFE_DETAIL_CLIENT_IMPL_H_
 #define MAIDSAFE_DETAIL_CLIENT_IMPL_H_
 
+#include <chrono>
+#include <condition_variable>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+
+#include "maidsafe/common/asio_service.h"
+#include "maidsafe/common/rsa.h"
+#include "maidsafe/common/data_types/immutable_data.h"
+#include "maidsafe/common/data_types/mutable_data.h"
+#include "maidsafe/common/data_types/structured_data_versions.h"
+#include "maidsafe/passport/passport.h"
+#include "maidsafe/passport/types.h"
+#include "maidsafe/routing/api_config.h"
+#include "maidsafe/routing/routing_api.h"
+#include "maidsafe/nfs/public_pmid_helper.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 
 #include "maidsafe/client.h"
 
-#include "maidsafe/routing/routing_api.h"
-
-#include "maidsafe/nfs/client/maid_node_nfs.h"
-
-
 namespace maidsafe {
 
-namespace test {
-  class ClientTest_FUNC_RegisterVault_Test;
-}
+namespace test { class ClientTest_FUNC_RegisterVault_Test; }
 
 namespace detail {
 
@@ -74,6 +84,7 @@ class ClientImpl {
 
   void DeleteBranchUntilFork(const MutableData::Name& mutable_data_name,
                              const StructuredDataVersions::VersionName& branch_tip);
+
   friend class test::ClientTest_FUNC_RegisterVault_Test;
 
  private:

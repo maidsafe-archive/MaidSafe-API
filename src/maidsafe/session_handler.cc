@@ -18,16 +18,14 @@
 
 #include "maidsafe/session_handler.h"
 
-#include "maidsafe/common/crypto.h"
-
 namespace maidsafe {
 
 namespace detail {
 
 Identity GetSessionLocation(const authentication::UserCredentials::Keyword& keyword,
                             const authentication::UserCredentials::Pin& pin) {
-  return Identity(crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
-                                               pin.Hash<crypto::SHA512>().string()));
+  return Identity{ crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
+                                                pin.Hash<crypto::SHA512>().string()) };
 }
 
 }  // namespace detail

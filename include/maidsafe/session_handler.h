@@ -19,12 +19,23 @@
 #ifndef MAIDSAFE_SESSION_HANDLER_H_
 #define MAIDSAFE_SESSION_HANDLER_H_
 
+#include <memory>
 #include <string>
+
+#include "maidsafe/common/crypto.h"
+#include "maidsafe/common/error.h"
+#include "maidsafe/common/log.h"
+#include "maidsafe/common/make_unique.h"
+#include "maidsafe/common/types.h"
+#include "maidsafe/common/utils.h"
+#include "maidsafe/common/authentication/user_credentials.h"
+#include "maidsafe/common/authentication/user_credential_utils.h"
+#include "maidsafe/common/data_types/immutable_data.h"
+#include "maidsafe/common/data_types/mutable_data.h"
+#include "maidsafe/common/data_types/structured_data_versions.h"
 
 #include "maidsafe/client.h"
 #include "maidsafe/detail/session_getter.h"
-#include "maidsafe/common/authentication/user_credentials.h"
-#include "maidsafe/common/authentication/user_credential_utils.h"
 
 namespace maidsafe {
 
@@ -48,15 +59,22 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
 template <typename Session>
 class SessionHandler {
  public:
-  // Used when logging in to existing account
+  // This constructor should be used before logging in to an existing account, i.e. where the
+  // session has not yet been retrieved from the network.  Throws std::exception on error.
   explicit SessionHandler(const BootstrapInfo& bootstrap_info);
-  // Used for creating new account
-  // throws if account can't be created on network
+
+  // This constructor should be used when creating a new account, i.e. where a session has never
+  // been put to the network.  'client' should already be joined to the network.  Internally saves
+  // the first session after creating the new account.  Throws std::exception on error.
   SessionHandler(Session&& session, Client& client,
                  authentication::UserCredentials&& user_credentials);
-  // No need to login for new accounts
+
+  // Retrieves and decrypts session info when logging in to an existing account.  Throws
+  // std::exception on error.
   void Login(authentication::UserCredentials&& user_credentials);
-  // Saves session on the network using client
+
+  // Saves session on the network using 'client', which should already be joined to the network.
+  // Throws std::exception on error.
   void Save(Client& client);
 
   Session& session();
@@ -74,7 +92,6 @@ class SessionHandler {
 
 //================== Implementation ================================================================
 
-
 namespace detail {
 
 // Update session here ?
@@ -84,7 +101,6 @@ template <typename Session>
 ImmutableData EncryptSession(const authentication::UserCredentials& user_credentials,
                              Session& session) {
   NonEmptyString serialised_session{ session.Serialise(user_credentials).data };
-
   crypto::SecurePassword secure_password{ authentication::CreateSecurePassword(user_credentials) };
   return ImmutableData{ crypto::SymmEncrypt(
       authentication::Obfuscate(user_credentials, serialised_session),
@@ -102,43 +118,36 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
           crypto::SymmDecrypt(crypto::CipherText{ encrypted_session.data() },
                               authentication::DeriveSymmEncryptKey(secure_password),
                               authentication::DeriveSymmEncryptIv(secure_password))).string() },
-        user_credentials };
+      user_credentials };
 }
 
 }  // namespace detail
 
-
-// Joins with anonymous data getter for getting session data from network
-// Used for already existing accounts
 template <typename Session>
 SessionHandler<Session>::SessionHandler(const BootstrapInfo& bootstrap_info)
     : session_(),
       current_session_version_(),
-      session_getter_(new detail::SessionGetter(bootstrap_info)),
+      session_getter_(maidsafe::make_unique<detail::SessionGetter>(bootstrap_info)),
       user_credentials_() {}
 
-// Used when creating new account
-// expects a joined client as a parameter
-// throws if failed to create maid account
-// Internally saves session after creating user account
-// throws if failed to save session
 template <typename Session>
 SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
                                         authentication::UserCredentials&& user_credentials)
-    : session_(new Session(std::move(session))),
+    : session_(maidsafe::make_unique<Session>(std::move(session))),
       current_session_version_(),
-      session_getter_(),  // Not reqired when creating account.
+      session_getter_(),
       user_credentials_(std::move(user_credentials)) {
   // throw if client & session are not coherent
   // TODO(Prakash) Validate credentials
-  auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
-                                                   *user_credentials_.pin));
-  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
-  ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
-  LOG(kInfo) << " Immutable encrypted Session data name : "
-             << HexSubstr(encrypted_serialised_session.name()->string());
+  Identity session_location{ detail::GetSessionLocation(*user_credentials_.keyword,
+                                                        *user_credentials_.pin) };
+  LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
+  ImmutableData encrypted_serialised_session{
+      detail::EncryptSession(user_credentials_, *session_) };
+  LOG(kVerbose) << "Immutable encrypted Session data name: "
+                << HexSubstr(encrypted_serialised_session.name()->string());
   try {
-    LOG(kInfo) << "Put encrypted_serialised_session ";
+    LOG(kVerbose) << "Put encrypted_serialised_session";
     auto put_future = client.Put(encrypted_serialised_session);
     // put_future.get();   // FIXME Prakash BEFORE_RELEASE
     StructuredDataVersions::VersionName session_version(0, encrypted_serialised_session.name());
@@ -146,7 +155,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
         MutableData::Name(session_location), session_version, 20, 1);
     create_version_tree_future.get();
     current_session_version_ = session_version;
-    LOG(kInfo) << "Created Version tree";
+    LOG(kVerbose) << "Created Version tree";
   } catch (const std::exception& e) {
     LOG(kError) << "Failed to store session. " << boost::diagnostic_information(e);
     client.Delete(encrypted_serialised_session.name());
@@ -155,27 +164,28 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   }
 }
 
-// throw if session already exists
-// this method should not be called when creating account with session handle construct
 template <typename Session>
 void SessionHandler<Session>::Login(authentication::UserCredentials&& user_credentials) {
   if (session_)
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
 
-  auto session_location(detail::GetSessionLocation(*user_credentials.keyword,
-                                                   *user_credentials.pin));
-  LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
+  Identity session_location{ detail::GetSessionLocation(*user_credentials_.keyword,
+                                                        *user_credentials_.pin) };
+  LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
   auto versions_future =
       session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
-  LOG(kInfo) << "waiting on versions_future";
+  LOG(kVerbose) << "Waiting for versions_future";
   auto versions(versions_future.get());
-  LOG(kInfo) << "GetVersions from session location succeded ";
-  assert(versions.size() == 1);
+  LOG(kVerbose) << "GetVersions from session location succeeded";
+  assert(versions.size() == 1U);
+  // TODO(Fraser#5#): 2014-04-17 - Get more than just the latest version - possibly just for the
+  // case where the latest one fails.  Or just throw, but add 'int version_number' to this
+  // function's signature where 0 == most recent, 1 == second newest, etc.
   auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
   auto encrypted_serialised_session(encrypted_serialised_session_future.get());
-  LOG(kInfo) << "Get encrypted_serialised_session succeded";
-  session_.reset(new Session(detail::DecryptSession<Session>(user_credentials,
-                                                             encrypted_serialised_session)));
+  LOG(kVerbose) << "Get encrypted_serialised_session succeeded";
+  session_ = maidsafe::make_unique<Session>(
+      detail::DecryptSession<Session>(user_credentials, encrypted_serialised_session));
   current_session_version_ = versions.at(0);
   user_credentials_ = std::move(user_credentials);
   session_getter_.reset();
@@ -184,27 +194,26 @@ void SessionHandler<Session>::Login(authentication::UserCredentials&& user_crede
 template <typename Session>
 void SessionHandler<Session>::Save(Client& client) {
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
-  LOG(kInfo) << " Immutable encrypted new Session data name : "
-             << HexSubstr(encrypted_serialised_session.name()->string());
+  LOG(kVerbose) << " Immutable encrypted new Session data name : "
+                << HexSubstr(encrypted_serialised_session.name()->string());
   try {
     auto put_future = client.Put(encrypted_serialised_session);
 //  put_future.get();  // FIXME Prakash BEFORE_RELEASE
-    StructuredDataVersions::VersionName new_session_version(current_session_version_.index + 1,
-                                                            encrypted_serialised_session.name());
+    StructuredDataVersions::VersionName new_session_version{ current_session_version_.index + 1,
+                                                             encrypted_serialised_session.name() };
     assert(current_session_version_.id != new_session_version.id);
-    auto session_location(detail::GetSessionLocation(*user_credentials_.keyword,
-                                                     *user_credentials_.pin));
-    LOG(kInfo) << "Session location : " << DebugId(NodeId(session_location.string()));
+    Identity session_location{ detail::GetSessionLocation(*user_credentials_.keyword,
+                                                          *user_credentials_.pin) };
+    LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
     auto put_version_future = client.PutVersion(MutableData::Name(session_location),
                                                 current_session_version_,
                                                 new_session_version);
     put_version_future.get();
     current_session_version_ = new_session_version;
-    LOG(kInfo) << "Save Session succeded";
+    LOG(kVerbose) << "Save Session succeeded";
   } catch (const std::exception& e) {
     LOG(kError) << boost::diagnostic_information(e);
     client.Delete(encrypted_serialised_session.name());
-    // TODO(Fraser) BEFORE_RELEASE need to delete version tree here
     throw;
   }
 }

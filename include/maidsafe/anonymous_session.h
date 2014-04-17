@@ -26,17 +26,15 @@
 #include "boost/asio/ip/address.hpp"
 #include "boost/date_time/posix_time/ptime.hpp"
 
-#include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/common/config.h"
 #include "maidsafe/common/tagged_value.h"
 #include "maidsafe/common/types.h"
+#include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/passport/passport.h"
 
 #include "maidsafe/session_handler.h"
 
 namespace maidsafe {
-
-namespace authentication { struct UserCredentials; }
 
 namespace test {
 
@@ -47,7 +45,7 @@ class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
 
 struct AnonymousSession {
   // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
-  typedef TaggedValue<std::string, struct AnonymousSessiontag> SerialisedType;
+  typedef TaggedValue<std::string, struct AnonymousSessionTag> SerialisedType;
 
   // Used when creating a new user account.  Creates a new default-constructed passport.  Throws on
   // error.
@@ -63,6 +61,7 @@ struct AnonymousSession {
   uint16_t port;
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
+
   template <typename Session>
   friend ImmutableData detail::EncryptSession(
       const authentication::UserCredentials& user_credentials, Session& session);
@@ -81,7 +80,7 @@ struct AnonymousSession {
 
   // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
   explicit AnonymousSession(SerialisedType serialised_session,
-                            const authentication::UserCredentials &user_credentials);
+                            const authentication::UserCredentials& user_credentials);
 };
 
 void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;

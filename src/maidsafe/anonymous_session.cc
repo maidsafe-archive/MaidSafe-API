@@ -38,7 +38,7 @@ AnonymousSession::AnonymousSession(SerialisedType serialised_session,
   protobuf::AnonymousSession proto_session;
   if (!proto_session.ParseFromString(serialised_session))
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::parsing_error));
-  crypto::CipherText encrypted_passport(NonEmptyString(proto_session.serialised_passport()));
+  crypto::CipherText encrypted_passport{ NonEmptyString(proto_session.serialised_passport()) };
   passport = maidsafe::make_unique<passport::Passport>(encrypted_passport, user_credentials);
   timestamp = TimeStampToPtime(proto_session.timestamp());
   ip = boost::asio::ip::address::from_string(proto_session.ip());
@@ -76,7 +76,7 @@ AnonymousSession::SerialisedType AnonymousSession::Serialise(
 
   timestamp = TimeStampToPtime(proto_session.timestamp());
 
-  return SerialisedType(proto_session.SerializeAsString());
+  return SerialisedType{ proto_session.SerializeAsString() };
 }
 
 void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT {

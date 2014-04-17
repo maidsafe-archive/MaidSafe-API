@@ -19,11 +19,19 @@
 #ifndef MAIDSAFE_DETAIL_SESSION_GETTER_H_
 #define MAIDSAFE_DETAIL_SESSION_GETTER_H_
 
+#include <condition_variable>
+#include <memory>
+#include <mutex>
 #include <utility>
 #include <vector>
 
-#include "maidsafe/routing/routing_api.h"
+#include "boost/asio/ip/udp.hpp"
 
+#include "maidsafe/common/asio_service.h"
+#include "maidsafe/common/rsa.h"
+#include "maidsafe/routing/api_config.h"
+#include "maidsafe/routing/routing_api.h"
+#include "maidsafe/nfs/public_pmid_helper.h"
 #include "maidsafe/nfs/client/data_getter.h"
 
 namespace maidsafe {
@@ -40,8 +48,7 @@ class SessionGetter {
  private:
   void InitRouting(const BootstrapInfo& bootstrap_info);
   routing::Functors InitialiseRoutingCallbacks();
-  void OnNetworkStatusChange(int network_health);
-  void DoOnNetworkStatusChange(int network_health);
+  void OnNetworkStatusChange(int updated_network_health);
 
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;

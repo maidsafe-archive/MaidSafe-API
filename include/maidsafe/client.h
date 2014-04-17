@@ -16,6 +16,9 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
+#ifndef MAIDSAFE_CLIENT_H_
+#define MAIDSAFE_CLIENT_H_
+
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -34,14 +37,9 @@
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
 
-
-#ifndef MAIDSAFE_CLIENT_H_
-#define MAIDSAFE_CLIENT_H_
-
 namespace maidsafe {
-namespace test {
-  class ClientTest_FUNC_RegisterVault_Test;
-}
+
+namespace test { class ClientTest_FUNC_RegisterVault_Test; }
 
 namespace detail { class ClientImpl; }
 
@@ -57,11 +55,10 @@ class Client {
 
   typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
-  // For already existing accounts
+  // For already existing accounts.
   Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
 
-  // For new accounts
-  // throws on failure to create account
+  // For new accounts.  Throws on failure to create account.
   Client(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info);
 
   ~Client();
