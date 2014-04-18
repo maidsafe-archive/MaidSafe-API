@@ -169,8 +169,8 @@ void SessionHandler<Session>::Login(authentication::UserCredentials&& user_crede
   if (session_)
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
 
-  Identity session_location{ detail::GetSessionLocation(*user_credentials_.keyword,
-                                                        *user_credentials_.pin) };
+  Identity session_location{ detail::GetSessionLocation(*user_credentials.keyword,
+                                                        *user_credentials.pin) };
   LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
   auto versions_future =
       session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
