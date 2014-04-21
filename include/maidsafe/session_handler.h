@@ -172,23 +172,28 @@ void SessionHandler<Session>::Login(authentication::UserCredentials&& user_crede
   Identity session_location{ detail::GetSessionLocation(*user_credentials.keyword,
                                                         *user_credentials.pin) };
   LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
-  auto versions_future =
-      session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
-  LOG(kVerbose) << "Waiting for versions_future";
-  auto versions(versions_future.get());
-  LOG(kVerbose) << "GetVersions from session location succeeded";
-  assert(versions.size() == 1U);
-  // TODO(Fraser#5#): 2014-04-17 - Get more than just the latest version - possibly just for the
-  // case where the latest one fails.  Or just throw, but add 'int version_number' to this
-  // function's signature where 0 == most recent, 1 == second newest, etc.
-  auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
-  auto encrypted_serialised_session(encrypted_serialised_session_future.get());
-  LOG(kVerbose) << "Get encrypted_serialised_session succeeded";
-  session_ = maidsafe::make_unique<Session>(
-      detail::DecryptSession<Session>(user_credentials, encrypted_serialised_session));
-  current_session_version_ = versions.at(0);
-  user_credentials_ = std::move(user_credentials);
-  session_getter_.reset();
+  try {
+    auto versions_future =
+        session_getter_->data_getter().GetVersions(MutableData::Name(session_location));
+    LOG(kVerbose) << "Waiting for versions_future";
+    auto versions(versions_future.get());
+    LOG(kVerbose) << "GetVersions from session location succeeded";
+    assert(versions.size() == 1U);
+    // TODO(Fraser#5#): 2014-04-17 - Get more than just the latest version - possibly just for the
+    // case where the latest one fails.  Or just throw, but add 'int version_number' to this
+    // function's signature where 0 == most recent, 1 == second newest, etc.
+    auto encrypted_serialised_session_future(session_getter_->data_getter().Get(versions.at(0).id));
+    auto encrypted_serialised_session(encrypted_serialised_session_future.get());
+    LOG(kVerbose) << "Get encrypted_serialised_session succeeded";
+    session_ = maidsafe::make_unique<Session>(
+        detail::DecryptSession<Session>(user_credentials, encrypted_serialised_session));
+    current_session_version_ = versions.at(0);
+    user_credentials_ = std::move(user_credentials);
+    session_getter_.reset();
+  } catch (const std::exception& e) {
+    LOG(kError) << "Failed to Login. Error: " << boost::diagnostic_information(e);
+    throw;
+  }
 }
 
 template <typename Session>

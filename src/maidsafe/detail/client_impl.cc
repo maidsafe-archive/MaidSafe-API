@@ -145,15 +145,7 @@ void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
   // FIXME BEFORE_RELEASE discuss this
   // This should behave differently. In case of new maid account, it should timeout
   // For existing clients, should we try infinitly ?
-
-#ifdef TESTING
-  if (!network_health_condition_variable_.wait_for(lock, std::chrono::minutes(5), [this] {
-         return network_health_ == 100;
-       }))
-    BOOST_THROW_EXCEPTION(MakeError(VaultErrors::failed_to_join_network));
-#else
   network_health_condition_variable_.wait(lock, [this] { return network_health_ >= 100; });
-#endif
 }
 
 routing::Functors ClientImpl::InitialiseRoutingCallbacks() {
