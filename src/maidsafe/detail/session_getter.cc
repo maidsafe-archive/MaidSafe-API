@@ -24,7 +24,7 @@ namespace maidsafe {
 
 namespace detail {
 
-SessionGetter::SessionGetter(const BootstrapInfo& bootstrap_info)
+SessionGetter::SessionGetter(const routing::BootstrapContacts& bootstrap_contacts)
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
@@ -34,16 +34,12 @@ SessionGetter::SessionGetter(const BootstrapInfo& bootstrap_info)
       asio_service_(2) {
   data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, routing_);
   // FIXME need to update routing to get bootstrap endpoints along with public keys
-  InitRouting(bootstrap_info);
+  InitRouting(bootstrap_contacts);
 }
 
-void SessionGetter::InitRouting(const BootstrapInfo& bootstrap_info) {
+void SessionGetter::InitRouting(const routing::BootstrapContacts& bootstrap_contacts) {
   routing::Functors functors{ InitialiseRoutingCallbacks() };
-  // BEFORE_RELEASE temp work around, need to update routing/rudp to take bootstrap_info
-  std::vector<boost::asio::ip::udp::endpoint> peer_endpoints;
-  for (const auto& i : bootstrap_info)
-    peer_endpoints.push_back(i.first);
-  routing_.Join(functors, peer_endpoints);
+  routing_.Join(functors, bootstrap_contacts);
   // FIXME BEFORE_RELEASE discuss this
   std::unique_lock<std::mutex> lock{ network_health_mutex_ };
   network_health_condition_variable_.wait(lock, [this] { return network_health_ == 100; });

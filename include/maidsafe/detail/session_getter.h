@@ -36,13 +36,13 @@
 
 namespace maidsafe {
 
-typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
+//typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
 
 namespace detail {
 
 class SessionGetter {
  public:
-  explicit SessionGetter(const BootstrapInfo& bootstrap_info);
+  explicit SessionGetter(const BootstrapContacts& bootstrap_contacts);
   nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
  private:

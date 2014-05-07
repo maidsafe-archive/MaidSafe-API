@@ -37,13 +37,13 @@
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
 
+#include "maidsafe/routing/bootstrap_file_operations.h"
+
 namespace maidsafe {
 
 namespace test { class ClientTest_FUNC_RegisterVault_Test; }
 
 namespace detail { class ClientImpl; }
-
-typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
 
 class Client {
  public:
@@ -56,10 +56,11 @@ class Client {
   typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
   // For already existing accounts.
-  Client(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
+  Client(const passport::Maid& maid, const routing::BootstrapContacts& bootstrap_contacts);
 
   // For new accounts.  Throws on failure to create account.
-  Client(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info);
+  Client(const passport::MaidAndSigner& maid_and_signer,
+         const routing::BootstrapContacts& bootstrap_contacts);
 
   ~Client();
 
