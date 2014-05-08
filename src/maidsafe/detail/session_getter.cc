@@ -33,7 +33,6 @@ SessionGetter::SessionGetter(const routing::BootstrapContacts& bootstrap_contact
       public_pmid_helper_(),
       asio_service_(2) {
   data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, routing_);
-  // FIXME need to update routing to get bootstrap endpoints along with public keys
   InitRouting(bootstrap_contacts);
 }
 
