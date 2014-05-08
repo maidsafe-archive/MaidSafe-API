@@ -28,7 +28,8 @@ namespace maidsafe {
 
 namespace detail {
 
-ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info)
+ClientImpl::ClientImpl(const passport::Maid& maid,
+                       const routing::BootstrapContacts& bootstrap_contacts)
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
@@ -41,13 +42,12 @@ ClientImpl::ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstra
   passport::PublicPmid::Name pmid_name;  // FIXME
   maid_node_nfs_ =
       maidsafe::make_unique<nfs_client::MaidNodeNfs>(asio_service_, routing_, pmid_name);
-  // FIXME need to update routing to get bootstrap endpoints along with public keys
-  InitRouting(bootstrap_info);
+  InitRouting(bootstrap_contacts);
   LOG(kInfo) << "Routing Initialised";
 }
 
 ClientImpl::ClientImpl(const passport::MaidAndSigner& maid_and_signer,
-                       const BootstrapInfo& bootstrap_info)
+                       const routing::BootstrapContacts& bootstrap_contacts)
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
@@ -60,8 +60,7 @@ ClientImpl::ClientImpl(const passport::MaidAndSigner& maid_and_signer,
   passport::PublicPmid::Name pmid_name;  // FIXME to be filled in by vault registration
   maid_node_nfs_ =
       maidsafe::make_unique<nfs_client::MaidNodeNfs>(asio_service_, routing_, pmid_name);
-  // FIXME need to update routing to get bootstrap endpoints along with public keys
-  InitRouting(bootstrap_info);
+  InitRouting(bootstrap_contacts);
   LOG(kInfo) << "Routing Initialised";
   passport::PublicMaid public_maid{ maid_ };
   passport::PublicAnmaid public_anmaid{ maid_and_signer.second };
@@ -134,13 +133,9 @@ void ClientImpl::DeleteBranchUntilFork(const MutableData::Name& mutable_data_nam
   return maid_node_nfs_->DeleteBranchUntilFork(mutable_data_name, branch_tip);
 }
 
-void ClientImpl::InitRouting(const BootstrapInfo& bootstrap_info) {
+void ClientImpl::InitRouting(const routing::BootstrapContacts& bootstrap_contacts) {
   routing::Functors functors(InitialiseRoutingCallbacks());
-  // BEFORE_RELEASE temp work around, need to update routing to take bootstrap_info
-  std::vector<boost::asio::ip::udp::endpoint> peer_endpoints;
-  for (const auto& i : bootstrap_info)
-    peer_endpoints.push_back(i.first);
-  routing_.Join(functors, peer_endpoints);
+  routing_.Join(functors, bootstrap_contacts);
   std::unique_lock<std::mutex> lock(network_health_mutex_);
   // FIXME BEFORE_RELEASE discuss this
   // This should behave differently. In case of new maid account, it should timeout

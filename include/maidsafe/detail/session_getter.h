@@ -36,17 +36,15 @@
 
 namespace maidsafe {
 
-//typedef std::vector<std::pair<boost::asio::ip::udp::endpoint, asymm::PublicKey>> BootstrapInfo;
-
 namespace detail {
 
 class SessionGetter {
  public:
-  explicit SessionGetter(const BootstrapContacts& bootstrap_contacts);
+  explicit SessionGetter(const routing::BootstrapContacts& bootstrap_contacts);
   nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
  private:
-  void InitRouting(const BootstrapInfo& bootstrap_info);
+  void InitRouting(const routing::BootstrapContacts &bootstrap_contacts);
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int updated_network_health);
 

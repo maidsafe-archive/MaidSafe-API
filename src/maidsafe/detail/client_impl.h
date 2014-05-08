@@ -47,9 +47,10 @@ namespace detail {
 
 class ClientImpl {
  public:
-  ClientImpl(const passport::Maid& maid, const BootstrapInfo& bootstrap_info);
+  ClientImpl(const passport::Maid& maid, const routing::BootstrapContacts& bootstrap_contacts);
 
-  ClientImpl(const passport::MaidAndSigner& maid_and_signer, const BootstrapInfo& bootstrap_info);
+  ClientImpl(const passport::MaidAndSigner& maid_and_signer,
+             const routing::BootstrapContacts& bootstrap_contacts);
 
   Client::RegisterVaultFuture RegisterVault(const passport::Pmid& pmid,
                                             const std::chrono::steady_clock::duration& timeout);
@@ -88,7 +89,7 @@ class ClientImpl {
   friend class test::ClientTest_FUNC_RegisterVault_Test;
 
  private:
-  void InitRouting(const BootstrapInfo& bootstrap_info);
+  void InitRouting(const routing::BootstrapContacts& bootstrap_contacts);
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int network_health);
   void DoOnNetworkStatusChange(int network_health);

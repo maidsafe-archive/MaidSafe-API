@@ -38,24 +38,24 @@ namespace bp = boost::process;
 // Pre-condition : Need a Vault network running
 TEST(ClientTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
-  BootstrapInfo bootstrap_info;
+  routing::BootstrapContacts bootstrap_contacts;
   auto maid_and_signer(passport::CreateMaidAndSigner());
   {
-    Client client_new_account(maid_and_signer, bootstrap_info);
+    Client client_new_account(maid_and_signer, bootstrap_contacts);
   }
   LOG(kInfo) << "joining existing account";
-  Client client_existing_account(maid_and_signer.first, bootstrap_info);
+  Client client_existing_account(maid_and_signer.first, bootstrap_contacts);
 }
 
 TEST(ClientTest, FUNC_RegisterVault) {
   routing::Parameters::append_local_live_port_endpoint = true;
-  BootstrapInfo bootstrap_info;
+  routing::BootstrapContacts bootstrap_contacts;
   auto maid_and_signer(passport::CreateMaidAndSigner());
   {
-    Client client_new_account(maid_and_signer, bootstrap_info);
+    Client client_new_account(maid_and_signer, bootstrap_contacts);
   }
   std::cout << "joining existing account" << std::endl;
-  Client client_existing_account(maid_and_signer.first, bootstrap_info);
+  Client client_existing_account(maid_and_signer.first, bootstrap_contacts);
   passport::Anpmid anpmid;
   passport::Pmid pmid(anpmid);
   passport::PublicPmid public_pmid(pmid);

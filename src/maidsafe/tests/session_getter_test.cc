@@ -32,9 +32,9 @@ namespace test {
 
 TEST(SessionGetterTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
-  BootstrapInfo bootstrap_info;
+  routing::BootstrapContacts bootstrap_contacts;
   {
-     SessionGetter session_getter(bootstrap_info);
+     SessionGetter session_getter(bootstrap_contacts);
   }
 }
 
