@@ -18,6 +18,10 @@
 
 #include "maidsafe/client.h"
 
+#ifdef __FreeBSD__
+extern "C" char **environ;
+#endif
+
 #include "boost/process/child.hpp"
 #include "boost/process/execute.hpp"
 #include "boost/process/initializers.hpp"
