@@ -61,8 +61,11 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
       public_pmid_helper_.AddEntry(std::move(future_key), give_key);
   };
 
+  // Required to pick cached messages
   functors.typed_message_and_caching.single_to_single.message_received =
-      [this](const routing::SingleToSingleMessage& /*message*/) {};
+      [this](const routing::SingleToSingleMessage& message) {
+      data_getter_->HandleMessage(message);
+  };
 
   // TODO(Prakash) fix routing asserts for clients so client need not to provide callbacks for all
   // functors
