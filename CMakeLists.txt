@@ -125,3 +125,14 @@ if(MaidsafeTesting)
   ms_add_project_experimental()
   ms_test_summary_output()
 endif()
+
+
+#==================================================================================================#
+# Package                                                                                          #
+#==================================================================================================#
+set(EXPORT_NAME maidsafe_api)
+install(TARGETS maidsafe_api EXPORT ${EXPORT_NAME} ARCHIVE DESTINATION bin/lib)
+
+install(FILES ${ApiApi} DESTINATION include/maidsafe/routing)
+install(FILES ${ApiDetailApi} DESTINATION include/maidsafe/routing)
+install(FILES ${ApiDetailHeaders} DESTINATION src/maidsafe/routing)
