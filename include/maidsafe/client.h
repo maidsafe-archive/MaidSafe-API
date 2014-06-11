@@ -43,7 +43,7 @@ namespace maidsafe {
 
 namespace test { class ClientTest_FUNC_RegisterVault_Test; }
 
-namespace detail { class ClientImpl; }
+namespace nfs_client { class MaidNodeNfs; }
 
 class Client {
  public:
@@ -109,7 +109,7 @@ class Client {
   friend class test::ClientTest_FUNC_RegisterVault_Test;
 
  private:
-  std::unique_ptr<detail::ClientImpl> pimpl_;
+  std::shared_ptr<nfs_client::MaidNodeNfs> pimpl_;
 };
 
 }  // namespace maidsafe

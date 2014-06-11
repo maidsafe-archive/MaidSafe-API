@@ -22,22 +22,17 @@
 extern "C" char **environ;
 #endif
 
-#include "boost/process/child.hpp"
-#include "boost/process/execute.hpp"
-#include "boost/process/initializers.hpp"
-#include "boost/process/wait_for_exit.hpp"
-
 #include "maidsafe/common/process.h"
 #include "maidsafe/common/test.h"
+#include "maidsafe/common/utils.h"
+
 #include "maidsafe/routing/parameters.h"
 
-#include "maidsafe/detail/client_impl.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 
 namespace maidsafe {
 
 namespace test {
-
-namespace bp = boost::process;
 
 // Pre-condition : Need a Vault network running
 TEST(ClientTest, FUNC_Constructor) {
@@ -63,17 +58,15 @@ TEST(ClientTest, FUNC_RegisterVault) {
   passport::Anpmid anpmid;
   passport::Pmid pmid(anpmid);
   passport::PublicPmid public_pmid(pmid);
-  std::cout << "put pmid public key on network " << HexSubstr(public_pmid.name()->string())
-            << std::endl;
-  client_existing_account.pimpl_->maid_node_nfs_->Put(public_pmid);
-  std::this_thread::sleep_for(std::chrono::seconds(5));  // to be replaced by future.get()
-  auto get_future = client_existing_account.pimpl_->maid_node_nfs_->Get(public_pmid.name());
+  // Put(public_pmid) should be done by VaultManager
+  auto put_future = client_existing_account.pimpl_->Put(public_pmid);
+  put_future.get();
+  auto get_future = client_existing_account.pimpl_->Get(public_pmid.name());
   std::cout << " waiting to get pmid public key from network " << std::endl;
   get_future.get();
   std::cout << " RegisterVault " << std::endl;
-  client_existing_account.RegisterVault(pmid);
-  std::this_thread::sleep_for(std::chrono::seconds(5));
-  // need to start a Vault now to Put data on network
+  auto register_vault_future = client_existing_account.RegisterVault(pmid);
+  register_vault_future.get();
 }
 
 }  // namespace test
