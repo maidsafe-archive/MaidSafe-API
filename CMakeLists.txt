@@ -94,26 +94,16 @@ if(MaidsafeTesting)
   ms_add_executable(TESTapi "Tests/API" ${ApiTestsAllFiles})
   add_dependencies(TESTapi vault)
   target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
-  target_link_libraries(TESTapi maidsafe_api)
+  target_link_libraries(TESTapi maidsafe_api maidsafe_test)
 endif()
 
 ms_rename_outdated_built_exes()
 
 
 #==================================================================================================#
-# Export detail                                                                                    #
-#==================================================================================================#
-
-
-#==================================================================================================#
 # Set compiler and linker flags                                                                    #
 #==================================================================================================#
 include(standard_flags)
-
-
-#==================================================================================================#
-# Export API Dependency paths for UI projects                                                      #
-#==================================================================================================#
 
 
 #==================================================================================================#
@@ -130,8 +120,10 @@ endif()
 #==================================================================================================#
 # Package                                                                                          #
 #==================================================================================================#
-set(EXPORT_NAME maidsafe_api)
-install(TARGETS maidsafe_api EXPORT ${EXPORT_NAME} ARCHIVE DESTINATION lib)
+install(TARGETS maidsafe_api COMPONENT Development CONFIGURATIONS Debug Release ARCHIVE DESTINATION lib)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ COMPONENT Development DESTINATION include)
 
-install(FILES ${ApiApi} DESTINATION include/maidsafe/api)
-install(FILES ${ApiDetailApi} DESTINATION include/maidsafe/api/detail)
+if(MaidsafeTesting)
+  install(TARGETS TESTapi COMPONENT Tests CONFIGURATIONS Debug RUNTIME DESTINATION bin/debug)
+  install(TARGETS TESTapi COMPONENT Tests CONFIGURATIONS Release RUNTIME DESTINATION bin)
+endif()
