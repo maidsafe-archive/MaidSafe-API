@@ -149,7 +149,7 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
   try {
     LOG(kVerbose) << "Put encrypted_serialised_session";
     auto put_future = client.Put(encrypted_serialised_session);
-    // put_future.get();   // FIXME Prakash BEFORE_RELEASE
+    put_future.get();
     StructuredDataVersions::VersionName session_version(0, encrypted_serialised_session.name());
     auto create_version_tree_future = client.CreateVersionTree(
         MutableData::Name(session_location), session_version, 20, 1);
@@ -203,7 +203,7 @@ void SessionHandler<Session>::Save(Client& client) {
                 << HexSubstr(encrypted_serialised_session.name()->string());
   try {
     auto put_future = client.Put(encrypted_serialised_session);
-//  put_future.get();  // FIXME Prakash BEFORE_RELEASE
+    put_future.get();
     StructuredDataVersions::VersionName new_session_version{ current_session_version_.index + 1,
                                                              encrypted_serialised_session.name() };
     assert(current_session_version_.id != new_session_version.id);
