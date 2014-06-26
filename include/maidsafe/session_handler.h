@@ -34,7 +34,7 @@
 #include "maidsafe/common/data_types/mutable_data.h"
 #include "maidsafe/common/data_types/structured_data_versions.h"
 
-#include "maidsafe/client.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 #include "maidsafe/detail/session_getter.h"
 
 namespace maidsafe {
@@ -66,7 +66,7 @@ class SessionHandler {
   // This constructor should be used when creating a new account, i.e. where a session has never
   // been put to the network.  'client' should already be joined to the network.  Internally saves
   // the first session after creating the new account.  Throws std::exception on error.
-  SessionHandler(Session&& session, Client& client,
+  SessionHandler(Session&& session, nfs_client::MaidNodeNfs& maid_node_nfs,
                  authentication::UserCredentials&& user_credentials);
 
   // Retrieves and decrypts session info when logging in to an existing account.  Throws
@@ -75,7 +75,7 @@ class SessionHandler {
 
   // Saves session on the network using 'client', which should already be joined to the network.
   // Throws std::exception on error.
-  void Save(Client& client);
+  void Save(nfs_client::MaidNodeNfs& maid_node_nfs);
 
   Session& session();
 
@@ -131,7 +131,8 @@ SessionHandler<Session>::SessionHandler(const routing::BootstrapContacts& bootst
       user_credentials_() {}
 
 template <typename Session>
-SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
+SessionHandler<Session>::SessionHandler(Session&& session,
+                                        nfs_client::MaidNodeNfs& maid_node_nfs,
                                         authentication::UserCredentials&& user_credentials)
     : session_(maidsafe::make_unique<Session>(std::move(session))),
       current_session_version_(),
@@ -148,17 +149,17 @@ SessionHandler<Session>::SessionHandler(Session&& session, Client& client,
                 << HexSubstr(encrypted_serialised_session.name()->string());
   try {
     LOG(kVerbose) << "Put encrypted_serialised_session";
-    auto put_future = client.Put(encrypted_serialised_session);
-    // put_future.get();   // FIXME Prakash BEFORE_RELEASE
+    auto put_future = maid_node_nfs.Put(encrypted_serialised_session);
+    put_future.get();
     StructuredDataVersions::VersionName session_version(0, encrypted_serialised_session.name());
-    auto create_version_tree_future = client.CreateVersionTree(
+    auto create_version_tree_future = maid_node_nfs.CreateVersionTree(
         MutableData::Name(session_location), session_version, 20, 1);
     create_version_tree_future.get();
     current_session_version_ = session_version;
     LOG(kVerbose) << "Created Version tree";
   } catch (const std::exception& e) {
     LOG(kError) << "Failed to store session. " << boost::diagnostic_information(e);
-    client.Delete(encrypted_serialised_session.name());
+    maid_node_nfs.Delete(encrypted_serialised_session.name());
     // TODO(Fraser) BEFORE_RELEASE need to delete version tree here
     throw;
   }
@@ -197,20 +198,20 @@ void SessionHandler<Session>::Login(authentication::UserCredentials&& user_crede
 }
 
 template <typename Session>
-void SessionHandler<Session>::Save(Client& client) {
+void SessionHandler<Session>::Save(nfs_client::MaidNodeNfs& maid_node_nfs) {
   ImmutableData encrypted_serialised_session(detail::EncryptSession(user_credentials_, *session_));
   LOG(kVerbose) << " Immutable encrypted new Session data name : "
                 << HexSubstr(encrypted_serialised_session.name()->string());
   try {
-    auto put_future = client.Put(encrypted_serialised_session);
-//  put_future.get();  // FIXME Prakash BEFORE_RELEASE
+    auto put_future = maid_node_nfs.Put(encrypted_serialised_session);
+    put_future.get();
     StructuredDataVersions::VersionName new_session_version{ current_session_version_.index + 1,
                                                              encrypted_serialised_session.name() };
     assert(current_session_version_.id != new_session_version.id);
     Identity session_location{ detail::GetSessionLocation(*user_credentials_.keyword,
                                                           *user_credentials_.pin) };
     LOG(kVerbose) << "Session location: " << HexSubstr(session_location);
-    auto put_version_future = client.PutVersion(MutableData::Name(session_location),
+    auto put_version_future = maid_node_nfs.PutVersion(MutableData::Name(session_location),
                                                 current_session_version_,
                                                 new_session_version);
     put_version_future.get();
@@ -218,7 +219,7 @@ void SessionHandler<Session>::Save(Client& client) {
     LOG(kVerbose) << "Save Session succeeded";
   } catch (const std::exception& e) {
     LOG(kError) << boost::diagnostic_information(e);
-    client.Delete(encrypted_serialised_session.name());
+    maid_node_nfs.Delete(encrypted_serialised_session.name());
     throw;
   }
 }

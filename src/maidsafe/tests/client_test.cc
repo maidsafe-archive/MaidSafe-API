@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/client.h"
+#include "maidsafe/client1.h"
 
 #ifdef MAIDSAFE_BSD
 extern "C" char **environ;
