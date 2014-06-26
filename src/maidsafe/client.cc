@@ -17,23 +17,24 @@
     use of the MaidSafe Software.                                                                 */
 
 #include "maidsafe/client.h"
-#include "maidsafe/detail/client_impl.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 
 namespace maidsafe {
 
 Client::Client(const passport::Maid& maid, const routing::BootstrapContacts& bootstrap_contacts)
-    : pimpl_(new detail::ClientImpl(maid, bootstrap_contacts)) {}
+    : pimpl_(nfs_client::MaidNodeNfs::MakeShared(maid, bootstrap_contacts)) {}
 
 Client::Client(const passport::MaidAndSigner& maid_and_signer,
                const routing::BootstrapContacts& bootstrap_contacts)
-    : pimpl_(new detail::ClientImpl(maid_and_signer, bootstrap_contacts)) {}
+    : pimpl_(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer, bootstrap_contacts)) {}
 
-Client::~Client() {}
+Client::~Client() {
+  pimpl_->Stop();
+}
 
-Client::RegisterVaultFuture Client::RegisterVault(
-    const passport::Pmid& pmid,
+Client::RegisterVaultFuture Client::RegisterVault(const passport::Pmid& pmid,
     const std::chrono::steady_clock::duration& timeout) {
-  return pimpl_->RegisterVault(pmid, timeout);
+  return pimpl_->RegisterPmid(pmid, timeout);
 }
 
 Client::OnNetworkHealthChange& Client::network_health_change_signal() {
