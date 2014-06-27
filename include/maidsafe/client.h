@@ -21,7 +21,6 @@
 
 
 #include "boost/signals2/signal.hpp"
-#include "boost/thread/future.hpp"
 
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
@@ -29,7 +28,7 @@
 #include "maidsafe/routing/bootstrap_file_operations.h"
 
 #include "maidsafe/detail/session_getter.h"
-#include "maidsafe/session_handler.h"
+#include "maidsafe/detail/session_handler.h"
 
 namespace maidsafe {
 
@@ -38,20 +37,32 @@ namespace nfs_client { class MaidNodeNfs; }
 template <typename Session>
 class Client {
  public:
-  // FIXME
   typedef std::string Keyword;
   typedef uint32_t Pin;
   typedef std::string Password;
 
   typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
+  Client() = delete;
+  Client(const Client&) = delete;
+  Client(Client&&) = delete;
+  Client& operator=(const Client&) = delete;
+  Client& operator=(Client&&) = delete;
+
+  // This function should be used when creating a new account, i.e. where a session has never
+  // been put to the network. Internally saves the first encrypted session after creating the new
+  // account. Throws std::exception on error.
+  static std::shared_ptr<Client> CreateAccount(const Keyword& keyword,
+                                               const Pin& pin,
+                                               const Password& password);
+  // Retrieves and decrypts session info and logs in to an existing account.
+  // Throws std::exception on error.
   static std::shared_ptr<Client> Login(const Keyword& keyword,
       const Pin& pin, const Password& password,
       std::shared_ptr<detail::SessionGetter> session_getter = nullptr);
 
-  static std::shared_ptr<Client> CreateAccount(const Keyword& keyword,
-                                               const Pin& pin,
-                                               const Password& password);
+  // strong exception guarantee
+  void SaveSession();
 
   ~Client();
 
@@ -64,7 +75,7 @@ class Client {
   // For new accounts.  Throws on failure to create account.
   Client(const Keyword& keyword, const Pin& pin, const Password& password);
 
-  std::unique_ptr<SessionHandler<Session>> session_handler_;
+  std::unique_ptr<detail::SessionHandler<Session>> session_handler_;
   std::shared_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
 };
 
@@ -91,7 +102,7 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
       maid_node_nfs_() {
   routing::BootstrapContacts bootstrap_contacts;  // FIXME
 
-  authentication::UserCredentials user_credentials;  // FIXME
+  authentication::UserCredentials user_credentials;
   user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
       keyword);
   user_credentials.pin = maidsafe::make_unique<authentication::UserCredentials::Pin>(
@@ -101,9 +112,10 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
   auto maid_and_signer(passport::CreateMaidAndSigner());
 
   maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer, bootstrap_contacts);
-  session_handler_ = maidsafe::make_unique<SessionHandler<Session>>(Session{ maid_and_signer },
-                                                                    maid_node_nfs_,
-                                                                    std::move(user_credentials));
+  session_handler_ =
+      maidsafe::make_unique<detail::SessionHandler<Session>>(Session{ maid_and_signer },
+                                                             maid_node_nfs_,
+                                                             std::move(user_credentials));
 }
 
 template <typename Session>
@@ -112,22 +124,32 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
     : session_handler_(),
       maid_node_nfs_() {
   routing::BootstrapContacts bootstrap_contacts;  // FIXME
-  authentication::UserCredentials user_credentials;  // FIXME
+  authentication::UserCredentials user_credentials;
   user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
       keyword);
   user_credentials.pin = maidsafe::make_unique<authentication::UserCredentials::Pin>(
       std::to_string(pin));
   user_credentials.password = maidsafe::make_unique<authentication::UserCredentials::Password>(
       password);
-  session_handler_ = maidsafe::make_unique<SessionHandler<Session>>(bootstrap_contacts /*, session_getter*/); //FIXME
+  session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(bootstrap_contacts /*, session_getter*/); //FIXME
   session_handler_->Login(std::move(user_credentials));
   maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(
       session_handler_->session().passport->GetMaid(), bootstrap_contacts);
 }
 
 template <typename Session>
+void Client<Session>::SaveSession() {
+  session_handler_->Save(maid_node_nfs_);
+}
+
+template <typename Session>
 Client<Session>::~Client() {
-  maid_node_nfs_->Stop();
+  try {
+    session_handler_->Save(maid_node_nfs_);
+    maid_node_nfs_->Stop();
+  } catch (const std::exception& ex) {
+    LOG(kError) << "Error while Saving Session. Error : " << boost::diagnostic_information(ex);
+  }
 }
 
 }  // namespace maidsafe

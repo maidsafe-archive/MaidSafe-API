@@ -33,7 +33,58 @@ namespace maidsafe {
 
 namespace test {
 
-//// Pre-condition : Need a Vault network running --  move to nfs
+// Pre-condition : Need a Vault network running
+TEST(ClientTest, FUNC_CreateAccount) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
+  auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
+                                                        std::get<1>(user_credentials_tuple),
+                                                        std::get<2>(user_credentials_tuple));
+}
+
+TEST(ClientTest, FUNC_CreateAccountMultiple) {
+  const int kCount(10);
+  routing::Parameters::append_local_live_port_endpoint = true;
+  for (int i(0); i != kCount; ++i) {
+    auto user_credentials_tuple = GetRandomUserCredentialsTuple();
+    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
+                                                          std::get<1>(user_credentials_tuple),
+                                                          std::get<2>(user_credentials_tuple));
+  }
+}
+
+TEST(ClientTest, FUNC_Login) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
+  {
+    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
+                                                          std::get<1>(user_credentials_tuple),
+                                                          std::get<2>(user_credentials_tuple));
+  }
+  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
+                                                std::get<1>(user_credentials_tuple),
+                                                std::get<2>(user_credentials_tuple));
+}
+
+TEST(ClientTest, FUNC_SaveSession) {
+  const int kCount(10);
+  routing::Parameters::append_local_live_port_endpoint = true;
+  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
+  {
+    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
+                                                          std::get<1>(user_credentials_tuple),
+                                                          std::get<2>(user_credentials_tuple));
+  }
+  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
+                                                std::get<1>(user_credentials_tuple),
+                                                std::get<2>(user_credentials_tuple));
+  for (int i(0); i != kCount; ++i) {
+    client->SaveSession();
+    LOG(kInfo) << "Save session successful !";
+  }
+}
+
+// TODO  move to nfs
 //TEST(ClientTest, FUNC_Constructor) {
 //  routing::Parameters::append_local_live_port_endpoint = true;
 //  routing::BootstrapContacts bootstrap_contacts;
@@ -70,28 +121,6 @@ namespace test {
 //  auto register_vault_future = nfs_existing_account->RegisterPmid(pmid);
 //  register_vault_future.get();
 //}
-
-TEST(ClientTest, FUNC_CreateAccount) {
-  routing::Parameters::append_local_live_port_endpoint = true;
-  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
-  auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                        std::get<1>(user_credentials_tuple),
-                                                        std::get<2>(user_credentials_tuple));
-}
-
-TEST(ClientTest, FUNC_Login) {
-  routing::Parameters::append_local_live_port_endpoint = true;
-  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
-  {
-    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                          std::get<1>(user_credentials_tuple),
-                                                          std::get<2>(user_credentials_tuple));
-  }
-
-  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
-                                                std::get<1>(user_credentials_tuple),
-                                                std::get<2>(user_credentials_tuple));
-}
 
 }  // namespace test
 

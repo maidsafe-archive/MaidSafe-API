@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/session_handler.h"
+#include "maidsafe/detail/session_handler.h"
 
 namespace maidsafe {
 
