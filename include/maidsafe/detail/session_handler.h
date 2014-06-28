@@ -16,8 +16,8 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_SESSION_HANDLER_H_
-#define MAIDSAFE_SESSION_HANDLER_H_
+#ifndef MAIDSAFE_DETAIL_SESSION_HANDLER_H_
+#define MAIDSAFE_DETAIL_SESSION_HANDLER_H_
 
 #include <memory>
 #include <string>
@@ -228,4 +228,4 @@ Session& SessionHandler<Session>::session() {
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_SESSION_HANDLER_H_
+#endif  // MAIDSAFE_DETAIL_SESSION_HANDLER_H_

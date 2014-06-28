@@ -47,6 +47,9 @@ source_group("API Public Files" FILES ${ApiApi})
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
 source_group("API Detail Public Files" FILES ${ApiDetailApi})
 ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
+set(ConfigTestFiles "${ApiSourcesDir}/tests/config_test.cc")
+list(REMOVE_ITEM ApiTestsAllFiles "${ConfigTestFiles}")
+list(APPEND ConfigTestFiles "${ApiSourcesDir}/tests/tests_main.cc")
 
 # Check convenience header is up to date
 file(STRINGS ${ConvenienceHeader} MaidSafeHeader REGEX "#include")
@@ -95,6 +98,16 @@ if(MaidsafeTesting)
   add_dependencies(TESTapi vault)
   target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(TESTapi maidsafe_api maidsafe_test)
+
+  ms_add_executable(test_api_config_for_production_network "Tests/API" "${ConfigTestFiles}")
+  ms_add_executable(test_api_config_for_local_network "Tests/API" "${ConfigTestFiles}")
+  ms_add_executable(test_api_config_for_testnet "Tests/API" "${ConfigTestFiles}")
+  target_link_libraries(test_api_config_for_production_network maidsafe_api maidsafe_test)
+  target_link_libraries(test_api_config_for_local_network maidsafe_api maidsafe_test)
+  target_link_libraries(test_api_config_for_testnet maidsafe_api maidsafe_test)
+  target_compile_definitions(test_api_config_for_production_network PRIVATE PRODUCTION_NETWORK USE_CATCH)
+  target_compile_definitions(test_api_config_for_local_network PRIVATE LOCAL_NETWORK USE_CATCH)
+  target_compile_definitions(test_api_config_for_testnet PRIVATE TESTNET USE_CATCH)
 endif()
 
 ms_rename_outdated_built_exes()
@@ -112,6 +125,25 @@ include(standard_flags)
 if(MaidsafeTesting)
   ms_add_style_test()
   ms_add_gtests(TESTapi)
+
+  set(ConfigTestTimeout 1)
+  ms_update_test_timeout(ConfigTestTimeout)
+  add_test(NAME "\"API config for production network\""
+           COMMAND test_api_config_for_production_network --durations yes --warn NoAssertions
+                   --name "test_api_config_for_production_network ($<CONFIGURATION> build)")
+  add_test(NAME "\"API config for local network\""
+           COMMAND test_api_config_for_local_network --durations yes --warn NoAssertions
+                   --name "test_api_config_for_local_network ($<CONFIGURATION> build)")
+  add_test(NAME "\"API config for testnet\""
+           COMMAND test_api_config_for_testnet --durations yes --warn NoAssertions
+                   --name "test_api_config_for_testnet ($<CONFIGURATION> build)")
+  set(ConfigTests "\"API config for production network\"" "\"API config for local network\"" "\"API config for testnet\"")
+  set_tests_properties(${ConfigTests} PROPERTIES
+                       FAIL_REGULAR_EXPRESSION "No tests ran"
+                       TIMEOUT ${ConfigTestTimeout}
+                       LABELS "Api;Config;Unit")
+  set(AllCatchTests ${AllCatchTests} ${ConfigTests})
+
   ms_add_project_experimental()
   ms_test_summary_output()
 endif()

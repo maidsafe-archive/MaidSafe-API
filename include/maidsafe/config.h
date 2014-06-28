@@ -1,4 +1,4 @@
-/*  Copyright 2012 MaidSafe.net limited
+/*  Copyright 2014 MaidSafe.net limited
 
     This MaidSafe Software is licensed to you under (1) the MaidSafe.net Commercial License,
     version 1.0 or later, or (2) The General Public License (GPL), version 3, depending on which
@@ -16,42 +16,40 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_TESTS_TEST_UTILS_H_
-#define MAIDSAFE_TESTS_TEST_UTILS_H_
-
-#include <string>
-#include <tuple>
-
-#include "maidsafe/common/authentication/user_credentials.h"
+#ifndef MAIDSAFE_CONFIG_H_
+#define MAIDSAFE_CONFIG_H_
 
 namespace maidsafe {
 
-namespace test {
+#ifdef TESTING
 
-std::tuple<std::string, uint32_t, std::string> GetRandomUserCredentialsTuple();
+// One of these may be called before any other operation has been done to allow all clients to
+// connect to a non-production network for test purposes.
+//
+// To connect to a local network, you must ensure you have such a network running first.  This can
+// be done using the 'local_network_controller' tool.
+//
+// MaidSafe will aim to always have a testnet running across multiple separate geographical
+// locations to allow users to run in a sandboxed environment.
+//
+// These functions will throw if the network choice has already been initialised.  The choice will
+// will be initialised by calling one of these functions, or initialised to the default (production
+// network) by instantiating a class which connects to the network (e.g. a MaidClient).
+void UseLocalNetwork();
+void UseRemoteTestnet();
 
-authentication::UserCredentials GetRandomUserCredentials();
+#endif
 
-authentication::UserCredentials MakeUserCredentials(
-  const std::tuple<std::string, uint32_t, std::string>& credentials_tuple);
 
-}  // namespace test
 
 namespace detail {
 
-namespace test {
+enum class NetworkType { kProduction, kLocal, kTestnet };
 
-std::tuple<std::string, uint32_t, std::string> GetRandomUserCredentialsTuple();
-
-authentication::UserCredentials GetRandomUserCredentials();
-
-authentication::UserCredentials MakeUserCredentials(
-    const std::tuple<std::string, uint32_t, std::string>& credentials_tuple);
-
-}  // namespace test
+NetworkType GetNetworkType();
 
 }  // namespace detail
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_TESTS_TEST_UTILS_H_
+#endif  // MAIDSAFE_CONFIG_H_

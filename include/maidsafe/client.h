@@ -19,20 +19,17 @@
 #ifndef MAIDSAFE_CLIENT_H_
 #define MAIDSAFE_CLIENT_H_
 
-
 #include "boost/signals2/signal.hpp"
 
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
-
 #include "maidsafe/routing/bootstrap_file_operations.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 
 #include "maidsafe/detail/session_getter.h"
 #include "maidsafe/detail/session_handler.h"
 
 namespace maidsafe {
-
-namespace nfs_client { class MaidNodeNfs; }
 
 template <typename Session>
 class Client {
@@ -67,7 +64,6 @@ class Client {
   ~Client();
 
  private:
-
   // For already existing accounts.
   Client(const Keyword& keyword, const Pin& pin, const Password& password,
          std::shared_ptr<detail::SessionGetter> session_getter);
@@ -80,6 +76,8 @@ class Client {
 };
 
 
+
+//================== Implementation ================================================================
 template <typename Session>
 std::shared_ptr<Client<Session>> Client<Session>::CreateAccount(const Keyword& keyword,
     const Pin& pin, const Password& password) {

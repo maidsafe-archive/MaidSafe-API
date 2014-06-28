@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/session_handler.h"
+#include "maidsafe/detail/session_handler.h"
 
 #include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/test.h"
@@ -29,8 +29,9 @@
 
 namespace maidsafe {
 
-namespace test {
+namespace detail {
 
+namespace test {
 
 struct TestSession {
   typedef TaggedValue<std::string, struct AnonymousSessiontag> SerialisedType;
@@ -164,7 +165,8 @@ TEST(SessionHandlerTest, FUNC_Save) {
   }
 }
 
-
 }  // namespace test
+
+}  // namespace detail
 
 }  // namespace maidsafe

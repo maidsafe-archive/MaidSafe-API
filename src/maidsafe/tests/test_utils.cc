@@ -53,4 +53,25 @@ authentication::UserCredentials MakeUserCredentials(
 
 }  // namespace test
 
+namespace detail {
+
+namespace test {
+
+std::tuple<std::string, uint32_t, std::string> GetRandomUserCredentialsTuple() {
+  return maidsafe::test::GetRandomUserCredentialsTuple();
+}
+
+authentication::UserCredentials GetRandomUserCredentials() {
+  return maidsafe::test::GetRandomUserCredentials();
+}
+
+authentication::UserCredentials MakeUserCredentials(
+    const std::tuple<std::string, uint32_t, std::string>& credentials_tuple) {
+  return maidsafe::test::MakeUserCredentials(credentials_tuple);
+}
+
+}  // namespace test
+
+}  // namespace detail
+
 }  // namespace maidsafe

@@ -32,7 +32,7 @@
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/passport/passport.h"
 
-#include "maidsafe/session_handler.h"
+#include "maidsafe/detail/session_handler.h"
 
 namespace maidsafe {
 
