@@ -26,6 +26,7 @@ extern "C" char **environ;
 #include "maidsafe/routing/parameters.h"
 
 #include "maidsafe/anonymous_session.h"
+#include "maidsafe/detail/session_getter.h"
 #include "maidsafe/tests/test_utils.h"
 
 
@@ -64,6 +65,21 @@ TEST(ClientTest, FUNC_Login) {
   auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
                                                 std::get<1>(user_credentials_tuple),
                                                 std::get<2>(user_credentials_tuple));
+}
+
+TEST(ClientTest, FUNC_LoginWithSessionGetter) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  auto user_credentials_tuple = GetRandomUserCredentialsTuple();
+  {
+    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
+                                                          std::get<1>(user_credentials_tuple),
+                                                          std::get<2>(user_credentials_tuple));
+  }
+  auto session_getter_future = maidsafe::detail::SessionGetter::CreateSessionGetter();
+  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
+                                                std::get<1>(user_credentials_tuple),
+                                                std::get<2>(user_credentials_tuple),
+                                                session_getter_future.get());
 }
 
 TEST(ClientTest, FUNC_SaveSession) {

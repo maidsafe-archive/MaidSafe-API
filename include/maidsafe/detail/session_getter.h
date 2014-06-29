@@ -38,15 +38,30 @@ namespace maidsafe {
 
 namespace detail {
 
+template <typename Session>
+class SessionHandler;
+
 class SessionGetter {
  public:
-  explicit SessionGetter(const routing::BootstrapContacts& bootstrap_contacts);
-  nfs_client::DataGetter& data_getter() { return *data_getter_; }
+
+ SessionGetter(const SessionGetter&) = delete;
+ SessionGetter(SessionGetter&&) = delete;
+ SessionGetter& operator=(const SessionGetter&) = delete;
+ SessionGetter& operator=(SessionGetter&&) = delete;
+
+
+
+  static std::future<std::shared_ptr<SessionGetter>> CreateSessionGetter();
+  template <typename Session>
+  friend class SessionHandler;
 
  private:
+  SessionGetter();
   void InitRouting(const routing::BootstrapContacts &bootstrap_contacts);
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int updated_network_health);
+
+  nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;

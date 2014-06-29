@@ -24,7 +24,17 @@ namespace maidsafe {
 
 namespace detail {
 
-SessionGetter::SessionGetter(const routing::BootstrapContacts& bootstrap_contacts)
+std::future<std::shared_ptr<SessionGetter>> SessionGetter::CreateSessionGetter() {
+  std::packaged_task<std::shared_ptr<SessionGetter>()> create_session_getter_task([]() {
+      return std::shared_ptr<SessionGetter>(new SessionGetter{});
+  });
+  auto session_getter_future = create_session_getter_task.get_future();
+  std::thread thread(std::move(create_session_getter_task));
+  thread.detach();
+  return session_getter_future;
+}
+
+SessionGetter::SessionGetter()
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
@@ -33,6 +43,7 @@ SessionGetter::SessionGetter(const routing::BootstrapContacts& bootstrap_contact
       public_pmid_helper_(),
       asio_service_(2) {
   data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, routing_);
+  routing::BootstrapContacts bootstrap_contacts;  // FIXME
   InitRouting(bootstrap_contacts);
 }
 

@@ -118,7 +118,7 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
 
 template <typename Session>
 Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& password,
-                        std::shared_ptr<detail::SessionGetter> /*session_getter*/)
+                        std::shared_ptr<detail::SessionGetter> session_getter)
     : session_handler_(),
       maid_node_nfs_() {
   routing::BootstrapContacts bootstrap_contacts;  // FIXME
@@ -129,7 +129,8 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
       std::to_string(pin));
   user_credentials.password = maidsafe::make_unique<authentication::UserCredentials::Password>(
       password);
-  session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(bootstrap_contacts /*, session_getter*/); //FIXME
+  session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(bootstrap_contacts,
+                                                                            session_getter);
   session_handler_->Login(std::move(user_credentials));
   maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(
       session_handler_->session().passport->GetMaid(), bootstrap_contacts);

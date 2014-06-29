@@ -60,7 +60,8 @@ class SessionHandler {
  public:
   // This constructor should be used before logging in to an existing account, i.e. where the
   // session has not yet been retrieved from the network.  Throws std::exception on error.
-  explicit SessionHandler(const routing::BootstrapContacts& bootstrap_contacts);
+  explicit SessionHandler(const routing::BootstrapContacts& bootstrap_contacts,
+                          std::shared_ptr<detail::SessionGetter> session_getter = nullptr);
 
   // This constructor should be used when creating a new account, i.e. where a session has never
   // been put to the network.  'client' should already be joined to the network.  Internally saves
@@ -79,11 +80,10 @@ class SessionHandler {
   Session& session();
 
  private:
-  ImmutableData EncryptSession();
 
   std::unique_ptr<Session> session_;
   StructuredDataVersions::VersionName current_session_version_;
-  std::unique_ptr<detail::SessionGetter> session_getter_;
+  std::shared_ptr<detail::SessionGetter> session_getter_;
   authentication::UserCredentials user_credentials_;
 };
 
@@ -118,10 +118,12 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
 }
 
 template <typename Session>
-SessionHandler<Session>::SessionHandler(const routing::BootstrapContacts& bootstrap_contacts)
+SessionHandler<Session>::SessionHandler(const routing::BootstrapContacts& /*bootstrap_contacts*/,
+                                        std::shared_ptr<detail::SessionGetter> session_getter)
     : session_(),
       current_session_version_(),
-      session_getter_(maidsafe::make_unique<SessionGetter>(bootstrap_contacts)),
+      session_getter_(session_getter ? session_getter :
+                                       SessionGetter::CreateSessionGetter().get()),
       user_credentials_() {}
 
 template <typename Session>
