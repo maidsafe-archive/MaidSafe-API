@@ -53,7 +53,8 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
 
   functors.network_status =
       [this](const int& network_health) { OnNetworkStatusChange(network_health); };
-  functors.matrix_changed = [this](std::shared_ptr<routing::MatrixChange> /*matrix_change*/) {};
+  functors.close_nodes_change = [this](
+      std::shared_ptr<routing::CloseNodesChange> /*close_nodes_change*/) {};
   functors.request_public_key = [this](const NodeId& node_id,
                                        const routing::GivePublicKeyFunctor& give_key) {
       auto future_key(data_getter_->Get(passport::PublicPmid::Name{ Identity{ node_id.string() } },
