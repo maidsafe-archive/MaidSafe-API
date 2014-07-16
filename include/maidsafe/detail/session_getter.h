@@ -57,7 +57,7 @@ class SessionGetter {
 
  private:
   SessionGetter();
-  void InitRouting(const routing::BootstrapContacts &bootstrap_contacts);
+  void InitRouting();
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int updated_network_health);
 

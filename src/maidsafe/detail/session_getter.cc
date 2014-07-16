@@ -43,13 +43,12 @@ SessionGetter::SessionGetter()
       public_pmid_helper_(),
       asio_service_(2) {
   data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, routing_);
-  routing::BootstrapContacts bootstrap_contacts;  // FIXME
-  InitRouting(bootstrap_contacts);
+  InitRouting();
 }
 
-void SessionGetter::InitRouting(const routing::BootstrapContacts& bootstrap_contacts) {
+void SessionGetter::InitRouting() {
   routing::Functors functors{ InitialiseRoutingCallbacks() };
-  routing_.Join(functors, bootstrap_contacts);
+  routing_.Join(functors);
   // FIXME BEFORE_RELEASE discuss this
   std::unique_lock<std::mutex> lock{ network_health_mutex_ };
   network_health_condition_variable_.wait(lock, [this] { return network_health_ == 100; });

@@ -98,8 +98,6 @@ template <typename Session>
 Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& password)
     : session_handler_(),
       maid_node_nfs_() {
-  routing::BootstrapContacts bootstrap_contacts;  // FIXME
-
   authentication::UserCredentials user_credentials;
   user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
       keyword);
@@ -109,7 +107,7 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
       password);
   auto maid_and_signer(passport::CreateMaidAndSigner());
 
-  maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer, bootstrap_contacts);
+  maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer);
   session_handler_ =
       maidsafe::make_unique<detail::SessionHandler<Session>>(Session{ maid_and_signer },
                                                              maid_node_nfs_,
@@ -121,7 +119,6 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
                         std::shared_ptr<detail::SessionGetter> session_getter)
     : session_handler_(),
       maid_node_nfs_() {
-  routing::BootstrapContacts bootstrap_contacts;  // FIXME
   authentication::UserCredentials user_credentials;
   user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
       keyword);
@@ -129,11 +126,10 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
       std::to_string(pin));
   user_credentials.password = maidsafe::make_unique<authentication::UserCredentials::Password>(
       password);
-  session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(bootstrap_contacts,
-                                                                            session_getter);
+  session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(session_getter);
   session_handler_->Login(std::move(user_credentials));
   maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(
-      session_handler_->session().passport->GetMaid(), bootstrap_contacts);
+                     session_handler_->session().passport->GetMaid());
 }
 
 template <typename Session>

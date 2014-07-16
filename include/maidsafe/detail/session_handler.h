@@ -60,8 +60,7 @@ class SessionHandler {
  public:
   // This constructor should be used before logging in to an existing account, i.e. where the
   // session has not yet been retrieved from the network.  Throws std::exception on error.
-  explicit SessionHandler(const routing::BootstrapContacts& bootstrap_contacts,
-                          std::shared_ptr<detail::SessionGetter> session_getter = nullptr);
+  explicit SessionHandler(std::shared_ptr<detail::SessionGetter> session_getter = nullptr);
 
   // This constructor should be used when creating a new account, i.e. where a session has never
   // been put to the network.  'client' should already be joined to the network.  Internally saves
@@ -118,8 +117,7 @@ Session DecryptSession(const authentication::UserCredentials& user_credentials,
 }
 
 template <typename Session>
-SessionHandler<Session>::SessionHandler(const routing::BootstrapContacts& /*bootstrap_contacts*/,
-                                        std::shared_ptr<detail::SessionGetter> session_getter)
+SessionHandler<Session>::SessionHandler(std::shared_ptr<detail::SessionGetter> session_getter)
     : session_(),
       current_session_version_(),
       session_getter_(session_getter ? session_getter :
