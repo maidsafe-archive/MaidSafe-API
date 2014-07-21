@@ -25,26 +25,26 @@ namespace maidsafe {
 
 namespace test {
 
-TEST_CASE("API config", "[API][Config][Unit]") {
-  maidsafe::detail::NetworkType type;
-#if defined(PRODUCTION_NETWORK)
-  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kProduction);
-#elif defined(LOCAL_NETWORK)
-  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kLocal);
-  CHECK_NOTHROW(UseLocalNetwork());
-#else
-  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kTestnet);
-  CHECK_NOTHROW(UseRemoteTestnet());
-#endif
-  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
-  CHECK(type == kType);
-  CHECK_THROWS_AS(UseLocalNetwork(), common_error);
-  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
-  CHECK(type == kType);
-  CHECK_THROWS_AS(UseRemoteTestnet(), common_error);
-  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
-  CHECK(type == kType);
-}
+//TEST_CASE("API config", "[API][Config][Unit]") {
+//  maidsafe::detail::NetworkType type;
+//#if defined(PRODUCTION_NETWORK)
+//  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kProduction);
+//#elif defined(LOCAL_NETWORK)
+//  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kLocal);
+//  CHECK_NOTHROW(UseLocalNetwork());
+//#else
+//  const maidsafe::detail::NetworkType kType(maidsafe::detail::NetworkType::kTestnet);
+//  CHECK_NOTHROW(UseRemoteTestnet());
+//#endif
+//  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
+//  CHECK(type == kType);
+//  CHECK_THROWS_AS(UseLocalNetwork(), common_error);
+//  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
+//  CHECK(type == kType);
+//  CHECK_THROWS_AS(UseRemoteTestnet(), common_error);
+//  CHECK_NOTHROW(type = maidsafe::detail::GetNetworkType());
+//  CHECK(type == kType);
+//}
 
 }  // namespace test
 

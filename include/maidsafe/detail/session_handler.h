@@ -79,7 +79,6 @@ class SessionHandler {
   Session& session();
 
  private:
-
   std::unique_ptr<Session> session_;
   StructuredDataVersions::VersionName current_session_version_;
   std::shared_ptr<detail::SessionGetter> session_getter_;

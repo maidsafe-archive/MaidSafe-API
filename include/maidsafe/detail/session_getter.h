@@ -43,13 +43,10 @@ class SessionHandler;
 
 class SessionGetter {
  public:
-
- SessionGetter(const SessionGetter&) = delete;
- SessionGetter(SessionGetter&&) = delete;
- SessionGetter& operator=(const SessionGetter&) = delete;
- SessionGetter& operator=(SessionGetter&&) = delete;
-
-
+  SessionGetter(const SessionGetter&) = delete;
+  SessionGetter(SessionGetter&&) = delete;
+  SessionGetter& operator=(const SessionGetter&) = delete;
+  SessionGetter& operator=(SessionGetter&&) = delete;
 
   static std::future<std::shared_ptr<SessionGetter>> CreateSessionGetter();
   template <typename Session>

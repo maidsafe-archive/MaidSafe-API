@@ -19,11 +19,12 @@
 #ifndef MAIDSAFE_CLIENT_H_
 #define MAIDSAFE_CLIENT_H_
 
+#include <string>
+
 #include "boost/signals2/signal.hpp"
 
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/passport/types.h"
-#include "maidsafe/routing/bootstrap_file_operations.h"
 #include "maidsafe/nfs/client/maid_node_nfs.h"
 
 #include "maidsafe/detail/session_getter.h"

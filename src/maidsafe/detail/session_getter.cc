@@ -92,8 +92,6 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
       [this](const routing::GroupToSingleMessage& /*message*/) {};
   functors.typed_message_and_caching.group_to_group.put_cache_data =
       [this](const routing::GroupToGroupMessage& /*message*/) {};
-  functors.new_bootstrap_contact =
-      [this](const routing::BootstrapContact& /*bootstrap_contact*/) {};
 
   return functors;
 }

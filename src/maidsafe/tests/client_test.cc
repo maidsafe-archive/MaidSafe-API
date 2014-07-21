@@ -100,8 +100,8 @@ TEST(ClientTest, FUNC_SaveSession) {
   }
 }
 
-// TODO  move to nfs
-//TEST(ClientTest, FUNC_Constructor) {
+// TODO(Team)  move to nfs
+// TEST(ClientTest, FUNC_Constructor) {
 //  routing::Parameters::append_local_live_port_endpoint = true;
 //  routing::BootstrapContacts bootstrap_contacts;
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
@@ -112,14 +112,15 @@ TEST(ClientTest, FUNC_SaveSession) {
 //  LOG(kInfo) << "joining existing account";
 //  auto nfs_existing_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer.first,
 //                                                                  bootstrap_contacts);
-//}
+// }
 
-//TEST(ClientTest, FUNC_RegisterVault) {
+// TEST(ClientTest, FUNC_RegisterVault) {
 //  routing::Parameters::append_local_live_port_endpoint = true;
 //  routing::BootstrapContacts bootstrap_contacts;
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
 //  {
-//    auto nfs_new_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer, bootstrap_contacts);
+//    auto nfs_new_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer,
+//                           bootstrap_contacts);
 //  }
 //  std::cout << "joining existing account" << std::endl;
 //  auto nfs_existing_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer.first,
@@ -136,7 +137,7 @@ TEST(ClientTest, FUNC_SaveSession) {
 //  std::cout << " RegisterVault " << std::endl;
 //  auto register_vault_future = nfs_existing_account->RegisterPmid(pmid);
 //  register_vault_future.get();
-//}
+// }
 
 }  // namespace test
 
