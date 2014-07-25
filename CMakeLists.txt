@@ -110,9 +110,8 @@ include(standard_flags)
 # Tests                                                                                            #
 #==================================================================================================#
 if(MaidsafeTesting)
-  ms_add_style_test()
+  ms_add_default_tests()
   ms_add_gtests(TESTapi)
-  ms_add_project_experimental()
   ms_test_summary_output()
 endif()
 
