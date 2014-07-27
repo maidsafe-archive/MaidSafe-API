@@ -126,23 +126,23 @@ if(MaidsafeTesting)
   ms_add_default_tests()
   ms_add_gtests(TESTapi)
 
-  set(ConfigTestTimeout 1)
-  ms_update_test_timeout(ConfigTestTimeout)
-  add_test(NAME "\"API config for production network\""
-           COMMAND test_api_config_for_production_network --durations yes --warn NoAssertions
-                   --name "test_api_config_for_production_network ($<CONFIGURATION> build)")
-  add_test(NAME "\"API config for local network\""
-           COMMAND test_api_config_for_local_network --durations yes --warn NoAssertions
-                   --name "test_api_config_for_local_network ($<CONFIGURATION> build)")
-  add_test(NAME "\"API config for testnet\""
-           COMMAND test_api_config_for_testnet --durations yes --warn NoAssertions
-                   --name "test_api_config_for_testnet ($<CONFIGURATION> build)")
-  set(ConfigTests "\"API config for production network\"" "\"API config for local network\"" "\"API config for testnet\"")
-  set_tests_properties(${ConfigTests} PROPERTIES
-                       FAIL_REGULAR_EXPRESSION "No tests ran"
-                       TIMEOUT ${ConfigTestTimeout}
-                       LABELS "Api;Config;Unit")
-  set(AllCatchTests ${AllCatchTests} ${ConfigTests})
+#  set(ConfigTestTimeout 1)
+#  ms_update_test_timeout(ConfigTestTimeout)
+#  add_test(NAME "\"API config for production network\""
+#           COMMAND test_api_config_for_production_network --durations yes --warn NoAssertions
+#                   --name "test_api_config_for_production_network ($<CONFIGURATION> build)")
+#  add_test(NAME "\"API config for local network\""
+#           COMMAND test_api_config_for_local_network --durations yes --warn NoAssertions
+#                   --name "test_api_config_for_local_network ($<CONFIGURATION> build)")
+#  add_test(NAME "\"API config for testnet\""
+#           COMMAND test_api_config_for_testnet --durations yes --warn NoAssertions
+#                   --name "test_api_config_for_testnet ($<CONFIGURATION> build)")
+#  set(ConfigTests "\"API config for production network\"" "\"API config for local network\"" "\"API config for testnet\"")
+#  set_tests_properties(${ConfigTests} PROPERTIES
+#                       FAIL_REGULAR_EXPRESSION "No tests ran"
+#                       TIMEOUT ${ConfigTestTimeout}
+#                       LABELS "Api;Config;Unit")
+#  set(AllCatchTests ${AllCatchTests} ${ConfigTests})
 
   ms_test_summary_output()
 endif()
