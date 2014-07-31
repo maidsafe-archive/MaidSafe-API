@@ -47,7 +47,6 @@ struct TestSession {
   std::string session_string;
 };
 
-// Pre-condition : Need a Vault network running
 TEST(SessionHandlerTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   LOG(kInfo) << "Session Handler for exisiting account";

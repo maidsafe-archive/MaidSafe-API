@@ -47,9 +47,8 @@ source_group("API Public Files" FILES ${ApiApi})
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
 source_group("API Detail Public Files" FILES ${ApiDetailApi})
 ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
-set(ConfigTestFiles "${ApiSourcesDir}/tests/config_test.cc")
-list(REMOVE_ITEM ApiTestsAllFiles "${ConfigTestFiles}")
-list(APPEND ConfigTestFiles "${ApiSourcesDir}/tests/tests_main.cc")
+set(ApiNonNetworkTests ${ApiSourcesDir}/tests/anonymous_session_test.cc)
+list(REMOVE_ITEM ApiTestsAllFiles ${ApiNonNetworkTests})
 
 # Check convenience header is up to date
 file(STRINGS ${ConvenienceHeader} MaidSafeHeader REGEX "#include")
@@ -94,20 +93,13 @@ target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRI
 target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
 
 if(MaidsafeTesting)
-  ms_add_executable(TESTapi "Tests/API" ${ApiTestsAllFiles})
-  add_dependencies(TESTapi vault)
-  target_include_directories(TESTapi PRIVATE ${PROJECT_SOURCE_DIR}/src)
-  target_link_libraries(TESTapi maidsafe_api maidsafe_test)
+  ms_add_executable(test_api "Tests/API" ${ApiNonNetworkTests})
+  target_include_directories(test_api PRIVATE ${PROJECT_SOURCE_DIR}/src)
+  target_link_libraries(test_api maidsafe_api maidsafe_test)
 
-  ms_add_executable(test_api_config_for_production_network "Tests/API" "${ConfigTestFiles}")
-  ms_add_executable(test_api_config_for_local_network "Tests/API" "${ConfigTestFiles}")
-  ms_add_executable(test_api_config_for_testnet "Tests/API" "${ConfigTestFiles}")
-  target_link_libraries(test_api_config_for_production_network maidsafe_api maidsafe_test)
-  target_link_libraries(test_api_config_for_local_network maidsafe_api maidsafe_test)
-  target_link_libraries(test_api_config_for_testnet maidsafe_api maidsafe_test)
-  target_compile_definitions(test_api_config_for_production_network PRIVATE PRODUCTION_NETWORK USE_CATCH)
-  target_compile_definitions(test_api_config_for_local_network PRIVATE LOCAL_NETWORK USE_CATCH)
-  target_compile_definitions(test_api_config_for_testnet PRIVATE TESTNET USE_CATCH)
+  ms_add_executable(network_test_api "Tests/API" ${ApiTestsAllFiles})
+  target_include_directories(network_test_api PRIVATE ${PROJECT_SOURCE_DIR}/src)
+  target_link_libraries(network_test_api maidsafe_api maidsafe_test)
 endif()
 
 ms_rename_outdated_built_exes()
@@ -124,26 +116,8 @@ include(standard_flags)
 #==================================================================================================#
 if(MaidsafeTesting)
   ms_add_default_tests()
-  ms_add_gtests(TESTapi)
-
-#  set(ConfigTestTimeout 1)
-#  ms_update_test_timeout(ConfigTestTimeout)
-#  add_test(NAME "\"API config for production network\""
-#           COMMAND test_api_config_for_production_network --durations yes --warn NoAssertions
-#                   --name "test_api_config_for_production_network ($<CONFIGURATION> build)")
-#  add_test(NAME "\"API config for local network\""
-#           COMMAND test_api_config_for_local_network --durations yes --warn NoAssertions
-#                   --name "test_api_config_for_local_network ($<CONFIGURATION> build)")
-#  add_test(NAME "\"API config for testnet\""
-#           COMMAND test_api_config_for_testnet --durations yes --warn NoAssertions
-#                   --name "test_api_config_for_testnet ($<CONFIGURATION> build)")
-#  set(ConfigTests "\"API config for production network\"" "\"API config for local network\"" "\"API config for testnet\"")
-#  set_tests_properties(${ConfigTests} PROPERTIES
-#                       FAIL_REGULAR_EXPRESSION "No tests ran"
-#                       TIMEOUT ${ConfigTestTimeout}
-#                       LABELS "Api;Config;Unit")
-#  set(AllCatchTests ${AllCatchTests} ${ConfigTests})
-
+  ms_add_gtests(test_api)
+  ms_add_network_gtests(network_test_api)
   ms_test_summary_output()
 endif()
 
@@ -155,6 +129,6 @@ install(TARGETS maidsafe_api COMPONENT Development CONFIGURATIONS Debug Release 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ COMPONENT Development DESTINATION include)
 
 if(MaidsafeTesting)
-  install(TARGETS TESTapi COMPONENT Tests CONFIGURATIONS Debug RUNTIME DESTINATION bin/debug)
-  install(TARGETS TESTapi COMPONENT Tests CONFIGURATIONS Release RUNTIME DESTINATION bin)
+  install(TARGETS test_api network_test_api COMPONENT Tests CONFIGURATIONS Debug RUNTIME DESTINATION bin/debug)
+  install(TARGETS test_api network_test_api COMPONENT Tests CONFIGURATIONS Release RUNTIME DESTINATION bin)
 endif()

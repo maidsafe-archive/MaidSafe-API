@@ -34,7 +34,6 @@ namespace maidsafe {
 
 namespace test {
 
-// Pre-condition : Need a Vault network running
 TEST(ClientTest, FUNC_CreateAccount) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();

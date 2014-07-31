@@ -28,8 +28,6 @@ namespace detail {
 
 namespace test {
 
-// Pre-condition : Need a Vault network running
-
 TEST(SessionGetterTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto session_getter_future = SessionGetter::CreateSessionGetter();

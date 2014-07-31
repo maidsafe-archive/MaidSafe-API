@@ -21,6 +21,5 @@
 
 #include "maidsafe/anonymous_session.h"
 #include "maidsafe/client.h"
-#include "maidsafe/config.h"
 
 #endif  // MAIDSAFE_MAIDSAFE_H_  NOLINT
