@@ -47,8 +47,10 @@ source_group("API Public Files" FILES ${ApiApi})
 ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
 source_group("API Detail Public Files" FILES ${ApiDetailApi})
 ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
-set(ApiNonNetworkTests ${ApiSourcesDir}/tests/anonymous_session_test.cc)
-list(REMOVE_ITEM ApiTestsAllFiles ${ApiNonNetworkTests})
+set(TestsFilesShared ${ApiSourcesDir}/tests/test_utils.cc ${ApiSourcesDir}/tests/test_utils.h ${ApiSourcesDir}/tests/tests_main.cc)
+set(ApiNonNetworkTestsAllFiles ${ApiSourcesDir}/tests/anonymous_session_test.cc)
+list(REMOVE_ITEM ApiTestsAllFiles ${ApiNonNetworkTestsAllFiles})
+list(APPEND ApiNonNetworkTestsAllFiles ${TestsFilesShared})
 
 # Check convenience header is up to date
 file(STRINGS ${ConvenienceHeader} MaidSafeHeader REGEX "#include")
@@ -93,7 +95,7 @@ target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRI
 target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
 
 if(MaidsafeTesting)
-  ms_add_executable(test_api "Tests/API" ${ApiNonNetworkTests})
+  ms_add_executable(test_api "Tests/API" ${ApiNonNetworkTestsAllFiles})
   target_include_directories(test_api PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(test_api maidsafe_api maidsafe_test)
 
