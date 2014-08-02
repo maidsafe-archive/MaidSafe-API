@@ -16,8 +16,8 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_ANONYMOUS_SESSION_H_
-#define MAIDSAFE_ANONYMOUS_SESSION_H_
+#ifndef MAIDSAFE_ACCOUNT_H_
+#define MAIDSAFE_ACCOUNT_H_
 
 #include <cstdint>
 #include <memory>
@@ -32,28 +32,24 @@
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/passport/passport.h"
 
-#include "maidsafe/detail/session_handler.h"
+#include "maidsafe/detail/account_handler.h"
 
 namespace maidsafe {
 
-namespace test {
+namespace test { class AccountTest; }
 
-class AnonymousSessionTest_BEH_SaveAndLogin_Test;
-class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+struct Account {
+  // Type-safety helper to avoid trying to parse a different serialised object as Account.
+  typedef TaggedValue<std::string, struct AccountTag> SerialisedType;
 
-}  // namespace test
+  // Used when creating a new user account, i.e. registering a new user on the network rather than
+  // logging back in.  Creates a new default-constructed passport.  Throws on error.
+  explicit Account(const passport::MaidAndSigner& maid_and_signer);
 
-struct AnonymousSession {
-  // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
-  typedef TaggedValue<std::string, struct AnonymousSessionTag> SerialisedType;
-
-  // Used when creating a new user account.  Creates a new default-constructed passport.  Throws on
-  // error.
-  explicit AnonymousSession(const passport::MaidAndSigner& maid_and_signer);
-
-  // Move-constructible and move-assignable only
-  AnonymousSession(AnonymousSession&& other);
-  AnonymousSession& operator=(AnonymousSession other);
+  // Move-constructible and move-assignable only.
+  Account(Account&& other) MAIDSAFE_NOEXCEPT;
+  Account& operator=(Account other);
+  Account(const Account&) = delete;
 
   std::unique_ptr<passport::Passport> passport;
   boost::posix_time::ptime timestamp;
@@ -62,29 +58,27 @@ struct AnonymousSession {
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
 
-  template <typename Session>
-  friend ImmutableData detail::EncryptSession(
-      const authentication::UserCredentials& user_credentials, Session& session);
-  template <typename Session>
-  friend Session detail::DecryptSession(const authentication::UserCredentials& user_credentials,
-                                        const ImmutableData& encrypted_session);
-  friend class test::AnonymousSessionTest_BEH_SaveAndLogin_Test;
-  friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+  template <typename Account>
+  friend ImmutableData detail::EncryptAccount(
+      const authentication::UserCredentials& user_credentials, Account& account);
+  template <typename Account>
+  friend Account detail::DecryptAccount(const authentication::UserCredentials& user_credentials,
+                                        const ImmutableData& encrypted_account);
+  friend class test::AccountTest_BEH_SaveAndLogin_Test;
+  friend class test::AccountTest_BEH_MoveConstructAndAssign_Test;
 
  private:
-  AnonymousSession(const AnonymousSession&) = delete;
-
-  // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
+  // Used when saving account.  Updates 'timestamp' and returns serialised representation of this
   // struct.  Throws on error.
   SerialisedType Serialise(const authentication::UserCredentials& user_credentials);
 
-  // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
-  explicit AnonymousSession(SerialisedType serialised_session,
+  // Used when logging in.  Parses account from previously-serialised account.  Throws on error.
+  explicit Account(SerialisedType serialised_account,
                             const authentication::UserCredentials& user_credentials);
 };
 
-void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;
+void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT;
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_ANONYMOUS_SESSION_H_
+#endif  // MAIDSAFE_ACCOUNT_H_

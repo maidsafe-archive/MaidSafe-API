@@ -16,26 +16,17 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/session_getter.h"
-
-#include "maidsafe/common/test.h"
-
-#include "maidsafe/routing/parameters.h"
+#include "maidsafe/detail/account_handler.h"
 
 namespace maidsafe {
 
 namespace detail {
 
-namespace test {
-
-TEST(SessionGetterTest, FUNC_Constructor) {
-  routing::Parameters::append_local_live_port_endpoint = true;
-  auto session_getter_future = SessionGetter::CreateSessionGetter();
-  LOG(kVerbose) << "Started CreateSessionGetter thread";
-  auto session_getter = session_getter_future.get();
+Identity GetAccountLocation(const authentication::UserCredentials::Keyword& keyword,
+                            const authentication::UserCredentials::Pin& pin) {
+  return Identity{ crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
+                                                pin.Hash<crypto::SHA512>().string()) };
 }
-
-}  // namespace test
 
 }  // namespace detail
 

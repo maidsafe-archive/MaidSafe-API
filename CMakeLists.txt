@@ -48,7 +48,7 @@ ms_glob_dir(ApiDetail ${ApiSourcesDir}/detail "API Detail")
 source_group("API Detail Public Files" FILES ${ApiDetailApi})
 ms_glob_dir(ApiTests ${ApiSourcesDir}/tests "API Tests")
 set(TestsFilesShared ${ApiSourcesDir}/tests/test_utils.cc ${ApiSourcesDir}/tests/test_utils.h ${ApiSourcesDir}/tests/tests_main.cc)
-set(ApiNonNetworkTestsAllFiles ${ApiSourcesDir}/tests/anonymous_session_test.cc)
+set(ApiNonNetworkTestsAllFiles ${ApiSourcesDir}/tests/account_test.cc)
 list(REMOVE_ITEM ApiTestsAllFiles ${ApiNonNetworkTestsAllFiles})
 list(APPEND ApiNonNetworkTestsAllFiles ${TestsFilesShared})
 

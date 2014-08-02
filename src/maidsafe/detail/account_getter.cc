@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/session_getter.h"
+#include "maidsafe/detail/account_getter.h"
 
 #include "maidsafe/common/make_unique.h"
 
@@ -24,17 +24,17 @@ namespace maidsafe {
 
 namespace detail {
 
-std::future<std::shared_ptr<SessionGetter>> SessionGetter::CreateSessionGetter() {
-  std::packaged_task<std::shared_ptr<SessionGetter>()> create_session_getter_task([]() {
-      return std::shared_ptr<SessionGetter>(new SessionGetter{});
+std::future<std::shared_ptr<AccountGetter>> AccountGetter::CreateAccountGetter() {
+  std::packaged_task<std::shared_ptr<AccountGetter>()> create_account_getter_task([]() {
+      return std::shared_ptr<AccountGetter>(new AccountGetter{});
   });
-  auto session_getter_future = create_session_getter_task.get_future();
-  std::thread thread(std::move(create_session_getter_task));
+  auto account_getter_future = create_account_getter_task.get_future();
+  std::thread thread(std::move(create_account_getter_task));
   thread.detach();
-  return session_getter_future;
+  return account_getter_future;
 }
 
-SessionGetter::SessionGetter()
+AccountGetter::AccountGetter()
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
@@ -46,7 +46,7 @@ SessionGetter::SessionGetter()
   InitRouting();
 }
 
-void SessionGetter::InitRouting() {
+void AccountGetter::InitRouting() {
   routing::Functors functors{ InitialiseRoutingCallbacks() };
   routing_.Join(functors);
   // FIXME BEFORE_RELEASE discuss this
@@ -54,7 +54,7 @@ void SessionGetter::InitRouting() {
   network_health_condition_variable_.wait(lock, [this] { return network_health_ == 100; });
 }
 
-routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
+routing::Functors AccountGetter::InitialiseRoutingCallbacks() {
   routing::Functors functors;
   functors.typed_message_and_caching.group_to_single.message_received =
       [this](const routing::GroupToSingleMessage& message) {
@@ -78,7 +78,7 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
       data_getter_->HandleMessage(message);
   };
 
-  // TODO(Prakash) fix routing asserts for clients so client need not to provide callbacks for all
+  // TODO(Prakash) fix routing asserts for clients so private_client need not to provide callbacks for all
   // functors
   functors.typed_message_and_caching.single_to_group.message_received =
       [this](const routing::SingleToGroupMessage& /*message*/) {};
@@ -96,7 +96,7 @@ routing::Functors SessionGetter::InitialiseRoutingCallbacks() {
   return functors;
 }
 
-void SessionGetter::OnNetworkStatusChange(int updated_network_health) {
+void AccountGetter::OnNetworkStatusChange(int updated_network_health) {
   asio_service_.service().post([=] {
     routing::UpdateNetworkHealth(updated_network_health, network_health_, network_health_mutex_,
                                  network_health_condition_variable_, routing_.kNodeId());

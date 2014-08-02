@@ -16,15 +16,27 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-option optimize_for = LITE_RUNTIME;
+#include "maidsafe/detail/account_getter.h"
 
-package maidsafe.protobuf;
+#include "maidsafe/common/test.h"
 
-message AnonymousSession {
-  required bytes serialised_passport = 1;
-  required uint64 timestamp = 2;
-  required bytes ip = 3;
-  required int32 port = 4;
-  optional bytes unique_user_id = 5;
-  optional bytes root_parent_id = 6;
+#include "maidsafe/routing/parameters.h"
+
+namespace maidsafe {
+
+namespace detail {
+
+namespace test {
+
+TEST(AccountGetterTest, FUNC_Constructor) {
+  routing::Parameters::append_local_live_port_endpoint = true;
+  auto account_getter_future = AccountGetter::CreateAccountGetter();
+  LOG(kVerbose) << "Started CreateAccountGetter thread";
+  auto account_getter = account_getter_future.get();
 }
+
+}  // namespace test
+
+}  // namespace detail
+
+}  // namespace maidsafe

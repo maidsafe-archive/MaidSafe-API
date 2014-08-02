@@ -16,18 +16,15 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/session_handler.h"
+option optimize_for = LITE_RUNTIME;
 
-namespace maidsafe {
+package maidsafe.protobuf;
 
-namespace detail {
-
-Identity GetSessionLocation(const authentication::UserCredentials::Keyword& keyword,
-                            const authentication::UserCredentials::Pin& pin) {
-  return Identity{ crypto::Hash<crypto::SHA512>(keyword.Hash<crypto::SHA512>().string() +
-                                                pin.Hash<crypto::SHA512>().string()) };
+message Account {
+  required bytes serialised_passport = 1;
+  required uint64 timestamp = 2;
+  required bytes ip = 3;
+  required int32 port = 4;
+  optional bytes unique_user_id = 5;
+  optional bytes root_parent_id = 6;
 }
-
-}  // namespace detail
-
-}  // namespace maidsafe

@@ -16,8 +16,8 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_DETAIL_SESSION_GETTER_H_
-#define MAIDSAFE_DETAIL_SESSION_GETTER_H_
+#ifndef MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
+#define MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
 
 #include <condition_variable>
 #include <memory>
@@ -38,22 +38,20 @@ namespace maidsafe {
 
 namespace detail {
 
-template <typename Session>
-class SessionHandler;
+class AccountHandler;
 
-class SessionGetter {
+class AccountGetter {
  public:
-  SessionGetter(const SessionGetter&) = delete;
-  SessionGetter(SessionGetter&&) = delete;
-  SessionGetter& operator=(const SessionGetter&) = delete;
-  SessionGetter& operator=(SessionGetter&&) = delete;
+  AccountGetter(const AccountGetter&) = delete;
+  AccountGetter(AccountGetter&&) = delete;
+  AccountGetter& operator=(const AccountGetter&) = delete;
+  AccountGetter& operator=(AccountGetter&&) = delete;
 
-  static std::future<std::shared_ptr<SessionGetter>> CreateSessionGetter();
-  template <typename Session>
-  friend class SessionHandler;
+  static std::future<std::shared_ptr<AccountGetter>> CreateAccountGetter();
+  friend class AccountHandler;
 
  private:
-  SessionGetter();
+  AccountGetter();
   void InitRouting();
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int updated_network_health);
@@ -73,4 +71,4 @@ class SessionGetter {
 
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_DETAIL_SESSION_GETTER_H_
+#endif  // MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
