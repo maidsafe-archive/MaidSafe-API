@@ -38,7 +38,7 @@ TEST(PrivateClientTest, FUNC_CreateAccount) {
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple));
+                               std::get<2>(user_credentials_tuple)).get();
 }
 
 TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
@@ -48,7 +48,7 @@ TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
     auto user_credentials_tuple(GetRandomUserCredentialsTuple());
     PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                  std::get<1>(user_credentials_tuple),
-                                 std::get<2>(user_credentials_tuple));
+                                 std::get<2>(user_credentials_tuple)).get();
   }
 }
 
@@ -57,7 +57,7 @@ TEST(PrivateClientTest, FUNC_Login) {
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple));
+                               std::get<2>(user_credentials_tuple)).get();
   PrivateClient::Login(std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
                        std::get<2>(user_credentials_tuple));
 }
@@ -71,7 +71,7 @@ TEST(ClientTest, FUNC_LoginWithAccountGetter) {
                                std::get<2>(user_credentials_tuple));
   std::shared_ptr<AccountGetter> account_getter{ account_getter_future.get() };
   PrivateClient::Login(std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
-                       std::get<2>(user_credentials_tuple), account_getter.get());
+                       std::get<2>(user_credentials_tuple), account_getter.get()).get();
 }
 
 TEST(ClientTest, FUNC_SaveAccount) {
@@ -86,7 +86,7 @@ TEST(ClientTest, FUNC_SaveAccount) {
   PrivateClient private_client{ PrivateClient::Login(std::get<0>(user_credentials_tuple),
                                                      std::get<1>(user_credentials_tuple),
                                                      std::get<2>(user_credentials_tuple),
-                                                     account_getter.get()) };
+                                                     account_getter.get()).get() };
   for (int i(0); i != kCount; ++i) {
     private_client.SaveAccount();
     LOG(kInfo) << "Save account successful !";

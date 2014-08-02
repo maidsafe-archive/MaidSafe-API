@@ -67,18 +67,21 @@ PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
       account_handler_(Account{ maid_and_signer }, ConvertToCredentials(keyword, pin, password),
                        *maid_node_nfs_) {}
 
-PrivateClient PrivateClient::Login(Keyword keyword, Pin pin, Password password,
-                                   AccountGetter* account_getter) {
-  std::shared_ptr<AccountGetter> temp_account_getter;
-  if (!account_getter) {
-    temp_account_getter = AccountGetter::CreateAccountGetter().get();
-    account_getter = temp_account_getter.get();
-  }
-  return PrivateClient{ keyword, pin, password, *account_getter };
+std::future<PrivateClient> PrivateClient::Login(Keyword keyword, Pin pin, Password password,
+                                                AccountGetter* account_getter) {
+  return std::async(std::launch::async, [=] {
+      if (account_getter)
+        return PrivateClient{ keyword, pin, password, *account_getter };
+      std::unique_ptr<AccountGetter> temp_account_getter{
+          AccountGetter::CreateAccountGetter().get() };
+      return PrivateClient{ keyword, pin, password, *temp_account_getter };
+  });
 }
 
-PrivateClient PrivateClient::CreateAccount(Keyword keyword, Pin pin, Password password) {
-  return PrivateClient{ keyword, pin, password, passport::CreateMaidAndSigner() };
+std::future<PrivateClient> PrivateClient::CreateAccount(Keyword keyword, Pin pin,
+                                                        Password password) {
+  return std::async(std::launch::async, [=] {
+      return PrivateClient{ keyword, pin, password, passport::CreateMaidAndSigner() }; });
 }
 
 void PrivateClient::SaveAccount() {

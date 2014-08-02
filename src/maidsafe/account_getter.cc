@@ -22,9 +22,9 @@
 
 namespace maidsafe {
 
-std::future<std::shared_ptr<AccountGetter>> AccountGetter::CreateAccountGetter() {
+std::future<std::unique_ptr<AccountGetter>> AccountGetter::CreateAccountGetter() {
   return std::async(std::launch::async,
-                    [] { return std::shared_ptr<AccountGetter>(new AccountGetter); });
+                    [] { return std::unique_ptr<AccountGetter>(new AccountGetter); });
 }
 
 AccountGetter::AccountGetter()

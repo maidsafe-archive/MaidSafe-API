@@ -51,7 +51,7 @@ class AccountGetter {
   AccountGetter& operator=(const AccountGetter&) = delete;
   AccountGetter& operator=(AccountGetter&&) = delete;
 
-  static std::future<std::shared_ptr<AccountGetter>> CreateAccountGetter();
+  static std::future<std::unique_ptr<AccountGetter>> CreateAccountGetter();
 
   friend class detail::AccountHandler;
 

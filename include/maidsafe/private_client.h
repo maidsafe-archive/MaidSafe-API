@@ -20,6 +20,7 @@
 #define MAIDSAFE_PRIVATE_CLIENT_H_
 
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <string>
 
@@ -47,16 +48,22 @@ class PrivateClient {
   PrivateClient& operator=(PrivateClient other);
   friend void swap(PrivateClient& lhs, PrivateClient& rhs) MAIDSAFE_NOEXCEPT;
   PrivateClient(const PrivateClient&) = delete;
+#if defined(_MSC_VER) && _MSC_VER == 1800  // VS 2013
+  // A bug in MSVC 2013 requires anything returned in a std::future to be default-constructible.
+  PrivateClient() : maid_node_nfs_(), account_handler_() {}
+#endif
 
   // Retrieves and decrypts account info and logs in to an existing account.  Doesn't take ownership
-  // of 'account_getter'.  Throws on error.
-  static PrivateClient Login(Keyword keyword, Pin pin, Password password,
-                             AccountGetter* account_getter = nullptr);
+  // of 'account_getter'.  If 'account_getter' is not null, the caller must ensure that it lives
+  // until the returned future's value has been retrieved (i.e. 'future.get()' has been called).
+  // Throws on error.
+  static std::future<PrivateClient> Login(Keyword keyword, Pin pin, Password password,
+                                          AccountGetter* account_getter = nullptr);
 
   // This function should be used when creating a new account, i.e. where a account has never
   // been put to the network.  Internally saves the first encrypted account after creating the new
   // account.  Throws on error.
-  static PrivateClient CreateAccount(Keyword keyword, Pin pin, Password password);
+  static std::future<PrivateClient> CreateAccount(Keyword keyword, Pin pin, Password password);
 
   // Throws on error, with strong exception guarantee.
   void SaveAccount();
