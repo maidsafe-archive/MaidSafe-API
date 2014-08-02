@@ -20,7 +20,7 @@ option optimize_for = LITE_RUNTIME;
 
 package maidsafe.protobuf;
 
-message AnonymousSession {
+message Account {
   required bytes serialised_passport = 1;
   required uint64 timestamp = 2;
   required bytes ip = 3;

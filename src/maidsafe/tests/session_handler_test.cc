@@ -23,7 +23,7 @@
 
 #include "maidsafe/routing/parameters.h"
 
-#include "maidsafe/anonymous_session.h"
+#include "maidsafe/account.h"
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/tests/test_utils.h"
 
@@ -51,16 +51,16 @@ TEST(SessionHandlerTest, FUNC_Constructor) {
   routing::Parameters::append_local_live_port_endpoint = true;
   LOG(kInfo) << "Session Handler for exisiting account";
   {
-     SessionHandler<AnonymousSession> session_handler{};
+     SessionHandler<Account> session_handler{};
   }
 
   LOG(kInfo) << "Session Handler for new account";
   {
     auto maid_and_signer(passport::CreateMaidAndSigner());
     auto maid_node_nfs = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer);
-    AnonymousSession session(maid_and_signer);
+    Account account(maid_and_signer);
     authentication::UserCredentials user_credentials(GetRandomUserCredentials());
-    SessionHandler<AnonymousSession> session_handler(std::move(session), maid_node_nfs,
+    SessionHandler<Account> session_handler(std::move(account), maid_node_nfs,
                                                      std::move(user_credentials));
   }
 }
@@ -78,19 +78,19 @@ TEST(SessionHandlerTest, BEH_EncryptDecrypt) {
 
 TEST(SessionHandlerTest, BEH_EncryptDecryptAnonymousSession) {
   for (int i (0); i < 20; ++i) {
-    AnonymousSession session(passport::CreateMaidAndSigner());
+    Account account(passport::CreateMaidAndSigner());
     authentication::UserCredentials user_credentials(GetRandomUserCredentials());
-    ImmutableData encrypted_session = maidsafe::detail::EncryptSession(user_credentials, session);
-    AnonymousSession decrypted_session =
-        maidsafe::detail::DecryptSession<AnonymousSession>(user_credentials, encrypted_session);
+    ImmutableData encrypted_account = maidsafe::detail::EncryptSession(user_credentials, account);
+    Account decrypted_account =
+        maidsafe::detail::DecryptSession<Account>(user_credentials, encrypted_account);
     // TODO(Prkash) Check passport keys
 
-    EXPECT_TRUE(decrypted_session.passport->GetMaid().name() == session.passport->GetMaid().name());
-    EXPECT_TRUE(decrypted_session.timestamp == session.timestamp);
-    EXPECT_TRUE(decrypted_session.ip == session.ip);
-    EXPECT_TRUE(decrypted_session.port == session.port);
-    EXPECT_TRUE(decrypted_session.unique_user_id == session.unique_user_id);
-    EXPECT_TRUE(decrypted_session.root_parent_id == session.root_parent_id);
+    EXPECT_TRUE(decrypted_account.passport->GetMaid().name() == account.passport->GetMaid().name());
+    EXPECT_TRUE(decrypted_account.timestamp == account.timestamp);
+    EXPECT_TRUE(decrypted_account.ip == account.ip);
+    EXPECT_TRUE(decrypted_account.port == account.port);
+    EXPECT_TRUE(decrypted_account.unique_user_id == account.unique_user_id);
+    EXPECT_TRUE(decrypted_account.root_parent_id == account.root_parent_id);
   }
 }
 
@@ -101,22 +101,22 @@ TEST(SessionHandlerTest, FUNC_Login) {
   {
     LOG(kInfo) << "SessionHandlerTest  -- Creating new account --";
     auto maid_node_nfs = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer);
-    AnonymousSession session(maid_and_signer);
+    Account account(maid_and_signer);
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
-    SessionHandler<AnonymousSession> session_handler(std::move(session), maid_node_nfs,
+    SessionHandler<Account> session_handler(std::move(account), maid_node_nfs,
                                                      std::move(user_credentials));
   }
   try {
     LOG(kInfo) << "SessionHandlerTest  -- Login for existing account --";
-    SessionHandler<AnonymousSession> session_handler{};
+    SessionHandler<Account> session_handler{};
     LOG(kInfo) << "About to Login .. ";
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     session_handler.Login(std::move(user_credentials));
     LOG(kInfo) << "Login successful !";
     ASSERT_TRUE(maid_and_signer.first.name() ==
-                session_handler.session().passport->GetMaid().name());
+                session_handler.account().passport->GetMaid().name());
     auto maid_node_nfs =
-        nfs_client::MaidNodeNfs::MakeShared(session_handler.session().passport->GetMaid());
+        nfs_client::MaidNodeNfs::MakeShared(session_handler.account().passport->GetMaid());
     LOG(kInfo) << "Client connection to account successful !";
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
@@ -131,22 +131,22 @@ TEST(SessionHandlerTest, FUNC_Save) {
   {
     LOG(kInfo) << "SessionHandlerTest  -- Creating new account --";
     auto maid_node_nfs = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer);
-    AnonymousSession session(maid_and_signer);
+    Account account(maid_and_signer);
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
-    SessionHandler<AnonymousSession> session_handler(std::move(session), maid_node_nfs,
-                                                     std::move(user_credentials));
+    SessionHandler<Account> session_handler(std::move(account), maid_node_nfs,
+                                            std::move(user_credentials));
   }
   try {
     LOG(kInfo) << "SessionHandlerTest  -- Login for existing account --";
-    SessionHandler<AnonymousSession> session_handler{};
+    SessionHandler<Account> session_handler{};
     LOG(kInfo) << "About to Login .. ";
     authentication::UserCredentials user_credentials(MakeUserCredentials(user_credentials_tuple));
     session_handler.Login(std::move(user_credentials));
     LOG(kInfo) << "Login successful !";
     ASSERT_TRUE(maid_and_signer.first.name() ==
-                session_handler.session().passport->GetMaid().name());
+                session_handler.account().passport->GetMaid().name());
     auto maid_node_nfs =
-        nfs_client::MaidNodeNfs::MakeShared(session_handler.session().passport->GetMaid());
+        nfs_client::MaidNodeNfs::MakeShared(session_handler.account().passport->GetMaid());
     LOG(kInfo) << "Client connection to account successful !";
     LOG(kInfo) << "SessionHandlerTest  -- Saving Session --";
     for (int i(0); i != 10; ++i) {

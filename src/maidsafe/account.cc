@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/anonymous_session.h"
+#include "maidsafe/account.h"
 
 #include <utility>
 
@@ -24,18 +24,18 @@
 #include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/utils.h"
 
-#include "maidsafe/anonymous_session.pb.h"
+#include "maidsafe/account.pb.h"
 
 namespace maidsafe {
 
-AnonymousSession::AnonymousSession(const passport::MaidAndSigner& maid_and_signer)
+Account::Account(const passport::MaidAndSigner& maid_and_signer)
     : passport(maidsafe::make_unique<passport::Passport>(maid_and_signer)),
       timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {}
 
-AnonymousSession::AnonymousSession(SerialisedType serialised_session,
+Account::Account(SerialisedType serialised_session,
                                    const authentication::UserCredentials& user_credentials)
     : passport(), timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {
-  protobuf::AnonymousSession proto_session;
+  protobuf::Account proto_session;
   if (!proto_session.ParseFromString(serialised_session))
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::parsing_error));
   crypto::CipherText encrypted_passport{ NonEmptyString(proto_session.serialised_passport()) };
@@ -49,7 +49,7 @@ AnonymousSession::AnonymousSession(SerialisedType serialised_session,
     root_parent_id = Identity(proto_session.root_parent_id());
 }
 
-AnonymousSession::AnonymousSession(AnonymousSession&& other)
+Account::Account(Account&& other)
     : passport(std::move(other.passport)),
       timestamp(std::move(other.timestamp)),
       ip(std::move(other.ip)),
@@ -57,14 +57,14 @@ AnonymousSession::AnonymousSession(AnonymousSession&& other)
       unique_user_id(std::move(other.unique_user_id)),
       root_parent_id(std::move(other.root_parent_id)) {}
 
-AnonymousSession& AnonymousSession::operator=(AnonymousSession other) {
+Account& Account::operator=(Account other) {
   swap(*this, other);
   return *this;
 }
 
-AnonymousSession::SerialisedType AnonymousSession::Serialise(
+Account::SerialisedType Account::Serialise(
     const authentication::UserCredentials& user_credentials) {
-  protobuf::AnonymousSession proto_session;
+  protobuf::Account proto_session;
   proto_session.set_serialised_passport(passport->Encrypt(user_credentials)->string());
   proto_session.set_timestamp(GetTimeStamp());
   proto_session.set_ip(ip.to_string());
@@ -79,7 +79,7 @@ AnonymousSession::SerialisedType AnonymousSession::Serialise(
   return SerialisedType{ proto_session.SerializeAsString() };
 }
 
-void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT {
+void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT {
   using std::swap;
   swap(lhs.passport, rhs.passport);
   swap(lhs.timestamp, rhs.timestamp);

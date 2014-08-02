@@ -33,7 +33,7 @@
 namespace maidsafe {
 
 template <typename Session>
-class Client {
+class PrivateClient {
  public:
   typedef std::string Keyword;
   typedef uint32_t Pin;
@@ -41,36 +41,36 @@ class Client {
 
   typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
-  Client() = delete;
-  Client(const Client&) = delete;
-  Client(Client&&) = delete;
-  Client& operator=(const Client&) = delete;
-  Client& operator=(Client&&) = delete;
+  PrivateClient() = delete;
+  PrivateClient(const PrivateClient&) = delete;
+  PrivateClient(PrivateClient&&) = delete;
+  PrivateClient& operator=(const PrivateClient&) = delete;
+  PrivateClient& operator=(PrivateClient&&) = delete;
 
   // This function should be used when creating a new account, i.e. where a session has never
   // been put to the network. Internally saves the first encrypted session after creating the new
   // account. Throws std::exception on error.
-  static std::shared_ptr<Client> CreateAccount(const Keyword& keyword,
-                                               const Pin& pin,
-                                               const Password& password);
+  static std::shared_ptr<PrivateClient> CreateAccount(const Keyword& keyword,
+                                                      const Pin& pin,
+                                                      const Password& password);
   // Retrieves and decrypts session info and logs in to an existing account.
   // Throws std::exception on error.
-  static std::shared_ptr<Client> Login(const Keyword& keyword,
+  static std::shared_ptr<PrivateClient> Login(const Keyword& keyword,
       const Pin& pin, const Password& password,
       std::shared_ptr<detail::SessionGetter> session_getter = nullptr);
 
   // strong exception guarantee
   void SaveSession();
 
-  ~Client();
+  ~PrivateClient();
 
  private:
   // For already existing accounts.
-  Client(const Keyword& keyword, const Pin& pin, const Password& password,
-         std::shared_ptr<detail::SessionGetter> session_getter);
+  PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password,
+                std::shared_ptr<detail::SessionGetter> session_getter);
 
   // For new accounts.  Throws on failure to create account.
-  Client(const Keyword& keyword, const Pin& pin, const Password& password);
+  PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password);
 
   std::unique_ptr<detail::SessionHandler<Session>> session_handler_;
   std::shared_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
@@ -80,23 +80,24 @@ class Client {
 
 //================== Implementation ================================================================
 template <typename Session>
-std::shared_ptr<Client<Session>> Client<Session>::CreateAccount(const Keyword& keyword,
-    const Pin& pin, const Password& password) {
-  return std::shared_ptr<Client<Session>>(new Client<Session>(keyword, pin, password));
+std::shared_ptr<PrivateClient<Session>> PrivateClient<Session>::CreateAccount(
+    const Keyword& keyword, const Pin& pin, const Password& password) {
+  return std::shared_ptr<PrivateClient<Session>>(new PrivateClient<Session>(keyword, pin, password));
 }
 
 
 template <typename Session>
-std::shared_ptr<Client<Session>> Client<Session>::Login(
+std::shared_ptr<PrivateClient<Session>> PrivateClient<Session>::Login(
     const Keyword& keyword, const Pin& pin, const Password& password,
     std::shared_ptr<detail::SessionGetter> session_getter) {
-  return std::shared_ptr<Client<Session>>(new Client<Session>(keyword, pin, password,
-                                                              session_getter));
+  return std::shared_ptr<PrivateClient<Session>>(new PrivateClient<Session>(keyword, pin, password,
+                                                                            session_getter));
 }
 
 // For new accounts.  Throws on failure to create account.
 template <typename Session>
-Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& password)
+PrivateClient<Session>::PrivateClient(const Keyword& keyword, const Pin& pin,
+                                      const Password& password)
     : session_handler_(),
       maid_node_nfs_() {
   authentication::UserCredentials user_credentials;
@@ -116,8 +117,8 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
 }
 
 template <typename Session>
-Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& password,
-                        std::shared_ptr<detail::SessionGetter> session_getter)
+PrivateClient<Session>::PrivateClient(const Keyword& keyword, const Pin& pin,
+    const Password& password, std::shared_ptr<detail::SessionGetter> session_getter)
     : session_handler_(),
       maid_node_nfs_() {
   authentication::UserCredentials user_credentials;
@@ -130,16 +131,16 @@ Client<Session>::Client(const Keyword& keyword, const Pin& pin, const Password& 
   session_handler_ = maidsafe::make_unique<detail::SessionHandler<Session>>(session_getter);
   session_handler_->Login(std::move(user_credentials));
   maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(
-                     session_handler_->session().passport->GetMaid());
+                     session_handler_->account().passport->GetMaid());
 }
 
 template <typename Session>
-void Client<Session>::SaveSession() {
+void PrivateClient<Session>::SaveSession() {
   session_handler_->Save(maid_node_nfs_);
 }
 
 template <typename Session>
-Client<Session>::~Client() {
+PrivateClient<Session>::~PrivateClient() {
   try {
     session_handler_->Save(maid_node_nfs_);
     maid_node_nfs_->Stop();

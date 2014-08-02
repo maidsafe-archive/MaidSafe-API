@@ -38,22 +38,22 @@ namespace maidsafe {
 
 namespace test {
 
-class AnonymousSessionTest_BEH_SaveAndLogin_Test;
-class AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+class AccountTest_BEH_SaveAndLogin_Test;
+class AccountTest_BEH_MoveConstructAndAssign_Test;
 
 }  // namespace test
 
-struct AnonymousSession {
+struct Account {
   // Type-safety helper to avoid trying to parse a different serialised object as AnonymousSession.
   typedef TaggedValue<std::string, struct AnonymousSessionTag> SerialisedType;
 
   // Used when creating a new user account.  Creates a new default-constructed passport.  Throws on
   // error.
-  explicit AnonymousSession(const passport::MaidAndSigner& maid_and_signer);
+  explicit Account(const passport::MaidAndSigner& maid_and_signer);
 
   // Move-constructible and move-assignable only
-  AnonymousSession(AnonymousSession&& other);
-  AnonymousSession& operator=(AnonymousSession other);
+  Account(Account&& other);
+  Account& operator=(Account other);
 
   std::unique_ptr<passport::Passport> passport;
   boost::posix_time::ptime timestamp;
@@ -68,22 +68,22 @@ struct AnonymousSession {
   template <typename Session>
   friend Session detail::DecryptSession(const authentication::UserCredentials& user_credentials,
                                         const ImmutableData& encrypted_session);
-  friend class test::AnonymousSessionTest_BEH_SaveAndLogin_Test;
-  friend class test::AnonymousSessionTest_BEH_MoveConstructAndAssign_Test;
+  friend class test::AccountTest_BEH_SaveAndLogin_Test;
+  friend class test::AccountTest_BEH_MoveConstructAndAssign_Test;
 
  private:
-  AnonymousSession(const AnonymousSession&) = delete;
+  Account(const Account&) = delete;
 
   // Used when saving session.  Updates 'timestamp' and returns serialised representation of this
   // struct.  Throws on error.
   SerialisedType Serialise(const authentication::UserCredentials& user_credentials);
 
   // Used when logging in.  Parses session from previously-serialised session.  Throws on error.
-  explicit AnonymousSession(SerialisedType serialised_session,
-                            const authentication::UserCredentials& user_credentials);
+  explicit Account(SerialisedType serialised_session,
+                   const authentication::UserCredentials& user_credentials);
 };
 
-void swap(AnonymousSession& lhs, AnonymousSession& rhs) MAIDSAFE_NOEXCEPT;
+void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT;
 
 }  // namespace maidsafe
 

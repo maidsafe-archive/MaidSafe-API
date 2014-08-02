@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/client.h"
+#include "maidsafe/private_client.h"
 
 #ifdef MAIDSAFE_BSD
 extern "C" char **environ;
@@ -25,7 +25,7 @@ extern "C" char **environ;
 #include "maidsafe/common/test.h"
 #include "maidsafe/routing/parameters.h"
 
-#include "maidsafe/anonymous_session.h"
+#include "maidsafe/account.h"
 #include "maidsafe/detail/session_getter.h"
 #include "maidsafe/tests/test_utils.h"
 
@@ -34,67 +34,65 @@ namespace maidsafe {
 
 namespace test {
 
-TEST(ClientTest, FUNC_CreateAccount) {
+TEST(PrivateClientTest, FUNC_CreateAccount) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
-  auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                        std::get<1>(user_credentials_tuple),
-                                                        std::get<2>(user_credentials_tuple));
+  auto private_client = PrivateClient<Account>::CreateAccount(
+      std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
+      std::get<2>(user_credentials_tuple));
 }
 
-TEST(ClientTest, FUNC_CreateAccountMultiple) {
+TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
   const int kCount(10);
   routing::Parameters::append_local_live_port_endpoint = true;
   for (int i(0); i != kCount; ++i) {
     auto user_credentials_tuple = GetRandomUserCredentialsTuple();
-    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                          std::get<1>(user_credentials_tuple),
-                                                          std::get<2>(user_credentials_tuple));
+    auto private_client = PrivateClient<Account>::CreateAccount(
+        std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
+        std::get<2>(user_credentials_tuple));
   }
 }
 
-TEST(ClientTest, FUNC_Login) {
+TEST(PrivateClientTest, FUNC_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
   {
-    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                          std::get<1>(user_credentials_tuple),
-                                                          std::get<2>(user_credentials_tuple));
+    auto private_client = PrivateClient<Account>::CreateAccount(
+        std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
+        std::get<2>(user_credentials_tuple));
   }
-  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
-                                                std::get<1>(user_credentials_tuple),
-                                                std::get<2>(user_credentials_tuple));
+  auto private_client = PrivateClient<Account>::Login(std::get<0>(user_credentials_tuple),
+      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple));
 }
 
-TEST(ClientTest, FUNC_LoginWithSessionGetter) {
+TEST(PrivateClientTest, FUNC_LoginWithSessionGetter) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
   {
-    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                          std::get<1>(user_credentials_tuple),
-                                                          std::get<2>(user_credentials_tuple));
+    auto private_client = PrivateClient<Account>::CreateAccount(
+        std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
+        std::get<2>(user_credentials_tuple));
   }
   auto session_getter_future = maidsafe::detail::SessionGetter::CreateSessionGetter();
-  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
-                                                std::get<1>(user_credentials_tuple),
-                                                std::get<2>(user_credentials_tuple),
-                                                session_getter_future.get());
+  auto private_client = PrivateClient<Account>::Login(std::get<0>(user_credentials_tuple),
+                                                               std::get<1>(user_credentials_tuple),
+                                                               std::get<2>(user_credentials_tuple),
+                                                               session_getter_future.get());
 }
 
-TEST(ClientTest, FUNC_SaveSession) {
+TEST(PrivateClientTest, FUNC_SaveSession) {
   const int kCount(10);
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
   {
-    auto client = Client<AnonymousSession>::CreateAccount(std::get<0>(user_credentials_tuple),
-                                                          std::get<1>(user_credentials_tuple),
-                                                          std::get<2>(user_credentials_tuple));
+    auto private_client = PrivateClient<Account>::CreateAccount(
+        std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
+        std::get<2>(user_credentials_tuple));
   }
-  auto client = Client<AnonymousSession>::Login(std::get<0>(user_credentials_tuple),
-                                                std::get<1>(user_credentials_tuple),
-                                                std::get<2>(user_credentials_tuple));
+  auto private_client = PrivateClient<Account>::Login(std::get<0>(user_credentials_tuple),
+      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple));
   for (int i(0); i != kCount; ++i) {
-    client->SaveSession();
+    private_client->SaveSession();
     LOG(kInfo) << "Save session successful !";
   }
 }
