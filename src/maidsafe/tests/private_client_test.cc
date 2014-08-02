@@ -34,7 +34,7 @@ namespace maidsafe {
 
 namespace test {
 
-TEST(ClientTest, FUNC_CreateAccount) {
+TEST(PrivateClientTest, FUNC_CreateAccount) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
   auto private_client = PrivateClient<Account>::CreateAccount(std::get<0>(user_credentials_tuple),
@@ -42,7 +42,7 @@ TEST(ClientTest, FUNC_CreateAccount) {
                                                         std::get<2>(user_credentials_tuple));
 }
 
-TEST(ClientTest, FUNC_CreateAccountMultiple) {
+TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
   const int kCount(10);
   routing::Parameters::append_local_live_port_endpoint = true;
   for (int i(0); i != kCount; ++i) {
@@ -53,7 +53,7 @@ TEST(ClientTest, FUNC_CreateAccountMultiple) {
   }
 }
 
-TEST(ClientTest, FUNC_Login) {
+TEST(PrivateClientTest, FUNC_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple = GetRandomUserCredentialsTuple();
   {
