@@ -19,132 +19,61 @@
 #ifndef MAIDSAFE_PRIVATE_CLIENT_H_
 #define MAIDSAFE_PRIVATE_CLIENT_H_
 
+#include <cstdint>
+#include <memory>
 #include <string>
 
 #include "boost/signals2/signal.hpp"
 
+#include "maidsafe/common/config.h"
 #include "maidsafe/passport/passport.h"
-#include "maidsafe/passport/types.h"
-#include "maidsafe/nfs/private_client/maid_node_nfs.h"
+#include "maidsafe/nfs/client/maid_node_nfs.h"
 
-#include "maidsafe/detail/account_getter.h"
 #include "maidsafe/detail/account_handler.h"
 
 namespace maidsafe {
+
+class AccountGetter;
 
 class PrivateClient {
  public:
   typedef std::string Keyword;
   typedef uint32_t Pin;
   typedef std::string Password;
-
   typedef boost::signals2::signal<void(int32_t)> OnNetworkHealthChange;
 
+  // Move-constructible and move-assignable only.
+  PrivateClient(PrivateClient&& other) MAIDSAFE_NOEXCEPT;
+  PrivateClient& operator=(PrivateClient other);
+  friend void swap(PrivateClient& lhs, PrivateClient& rhs) MAIDSAFE_NOEXCEPT;
   PrivateClient(const PrivateClient&) = delete;
-  PrivateClient(PrivateClient&&) = delete;
-  PrivateClient& operator=(const PrivateClient&) = delete;
-  PrivateClient& operator=(PrivateClient&&) = delete;
+
+  // Retrieves and decrypts account info and logs in to an existing account.  Doesn't take ownership
+  // of 'account_getter'.  Throws on error.
+  static PrivateClient Login(Keyword keyword, Pin pin, Password password,
+                             AccountGetter* account_getter = nullptr);
 
   // This function should be used when creating a new account, i.e. where a account has never
-  // been put to the network. Internally saves the first encrypted account after creating the new
-  // account. Throws std::exception on error.
-  static std::shared_ptr<PrivateClient> CreateAccount(const Keyword& keyword,
-                                               const Pin& pin,
-                                               const Password& password);
-  // Retrieves and decrypts account info and logs in to an existing account.
-  // Throws std::exception on error.
-  static std::shared_ptr<PrivateClient> Login(const Keyword& keyword,
-      const Pin& pin, const Password& password,
-      std::shared_ptr<detail::AccountGetter> account_getter = nullptr);
+  // been put to the network.  Internally saves the first encrypted account after creating the new
+  // account.  Throws on error.
+  static PrivateClient CreateAccount(Keyword keyword, Pin pin, Password password);
 
-  // strong exception guarantee
+  // Throws on error, with strong exception guarantee.
   void SaveAccount();
 
   ~PrivateClient();
 
  private:
   // For already existing accounts.
-  PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password,
-         std::shared_ptr<detail::AccountGetter> account_getter);
+  PrivateClient(Keyword keyword, Pin pin, Password password, AccountGetter& account_getter);
 
   // For new accounts.  Throws on failure to create account.
-  PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password);
+  PrivateClient(Keyword keyword, Pin pin, Password password,
+                passport::MaidAndSigner&& maid_and_signer);
 
-  std::unique_ptr<detail::AccountHandler<Account>> account_handler_;
   std::shared_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
+  detail::AccountHandler account_handler_;
 };
-
-
-
-//================== Implementation ================================================================
-template <typename Account>
-std::shared_ptr<PrivateClient<Account>> PrivateClient<Account>::CreateAccount(const Keyword& keyword,
-    const Pin& pin, const Password& password) {
-  return std::shared_ptr<PrivateClient<Account>>(new PrivateClient<Account>(keyword, pin, password));
-}
-
-
-template <typename Account>
-std::shared_ptr<PrivateClient<Account>> PrivateClient<Account>::Login(
-    const Keyword& keyword, const Pin& pin, const Password& password,
-    std::shared_ptr<detail::AccountGetter> account_getter) {
-  return std::shared_ptr<PrivateClient<Account>>(new PrivateClient<Account>(keyword, pin, password,
-                                                              account_getter));
-}
-
-// For new accounts.  Throws on failure to create account.
-template <typename Account>
-PrivateClient<Account>::PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password)
-    : account_handler_(),
-      maid_node_nfs_() {
-  authentication::UserCredentials user_credentials;
-  user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
-      keyword);
-  user_credentials.pin = maidsafe::make_unique<authentication::UserCredentials::Pin>(
-      std::to_string(pin));
-  user_credentials.password = maidsafe::make_unique<authentication::UserCredentials::Password>(
-      password);
-  auto maid_and_signer(passport::CreateMaidAndSigner());
-
-  maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer);
-  account_handler_ =
-      maidsafe::make_unique<detail::AccountHandler<Account>>(Account{ maid_and_signer },
-                                                             maid_node_nfs_,
-                                                             std::move(user_credentials));
-}
-
-template <typename Account>
-PrivateClient<Account>::PrivateClient(const Keyword& keyword, const Pin& pin, const Password& password,
-                        std::shared_ptr<detail::AccountGetter> account_getter)
-    : account_handler_(),
-      maid_node_nfs_() {
-  authentication::UserCredentials user_credentials;
-  user_credentials.keyword = maidsafe::make_unique<authentication::UserCredentials::Keyword>(
-      keyword);
-  user_credentials.pin = maidsafe::make_unique<authentication::UserCredentials::Pin>(
-      std::to_string(pin));
-  user_credentials.password = maidsafe::make_unique<authentication::UserCredentials::Password>(
-      password);
-  account_handler_ = maidsafe::make_unique<detail::AccountHandler<Account>>(account_getter);
-  account_handler_->Login(std::move(user_credentials));
-  maid_node_nfs_ = nfs_client::MaidNodeNfs::MakeShared(
-                     account_handler_->account().passport->GetMaid());
-}
-
-template <typename Account>
-void PrivateClient<Account>::SaveAccount() {
-  account_handler_->Save(maid_node_nfs_);
-}
-
-template <typename Account>
-PrivateClient<Account>::~PrivateClient() {
-  try {
-    account_handler_->Save(maid_node_nfs_);
-    maid_node_nfs_->Stop();
-  } catch (const std::exception& ex) {
-    LOG(kError) << "Error while Saving Account. Error : " << boost::diagnostic_information(ex);
-  }
-}
 
 }  // namespace maidsafe
 

@@ -16,13 +16,13 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
-#define MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
+#ifndef MAIDSAFE_ACCOUNT_GETTER_H_
+#define MAIDSAFE_ACCOUNT_GETTER_H_
 
 #include <condition_variable>
+#include <future>
 #include <memory>
 #include <mutex>
-#include <utility>
 #include <vector>
 
 #include "boost/asio/ip/udp.hpp"
@@ -36,10 +36,14 @@
 
 namespace maidsafe {
 
-namespace detail {
+namespace detail { class AccountHandler; }
 
-class AccountHandler;
-
+// This class is only used to establish and maintain a non-authenticated connection to the network.
+// It can be used during a login attempt to retrieve the encrypted account packet.  It is more
+// efficient to keep a single instance of this class alive until the login has succeeded to avoid
+// the cost or re-connecting to the network with every login attempt.  Other than the static factory
+// function, it has no public functions.  The friend class 'detail::AccountHandler' is the only one
+// which makes use of this class.
 class AccountGetter {
  public:
   AccountGetter(const AccountGetter&) = delete;
@@ -48,14 +52,14 @@ class AccountGetter {
   AccountGetter& operator=(AccountGetter&&) = delete;
 
   static std::future<std::shared_ptr<AccountGetter>> CreateAccountGetter();
-  friend class AccountHandler;
+
+  friend class detail::AccountHandler;
 
  private:
   AccountGetter();
   void InitRouting();
   routing::Functors InitialiseRoutingCallbacks();
   void OnNetworkStatusChange(int updated_network_health);
-
   nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
   std::mutex network_health_mutex_;
@@ -67,8 +71,6 @@ class AccountGetter {
   AsioService asio_service_;
 };
 
-}  // namespace detail
-
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_DETAIL_ACCOUNT_GETTER_H_
+#endif  // MAIDSAFE_ACCOUNT_GETTER_H_

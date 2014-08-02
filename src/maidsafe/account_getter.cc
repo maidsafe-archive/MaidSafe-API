@@ -16,22 +16,15 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/account_getter.h"
+#include "maidsafe/account_getter.h"
 
 #include "maidsafe/common/make_unique.h"
 
 namespace maidsafe {
 
-namespace detail {
-
 std::future<std::shared_ptr<AccountGetter>> AccountGetter::CreateAccountGetter() {
-  std::packaged_task<std::shared_ptr<AccountGetter>()> create_account_getter_task([]() {
-      return std::shared_ptr<AccountGetter>(new AccountGetter{});
-  });
-  auto account_getter_future = create_account_getter_task.get_future();
-  std::thread thread(std::move(create_account_getter_task));
-  thread.detach();
-  return account_getter_future;
+  return std::async(std::launch::async,
+                    [] { return std::shared_ptr<AccountGetter>(new AccountGetter); });
 }
 
 AccountGetter::AccountGetter()
@@ -78,8 +71,8 @@ routing::Functors AccountGetter::InitialiseRoutingCallbacks() {
       data_getter_->HandleMessage(message);
   };
 
-  // TODO(Prakash) fix routing asserts for clients so private_client need not to provide callbacks for all
-  // functors
+  // TODO(Prakash) fix routing asserts for clients so private_client need not to provide callbacks
+  // for all functors
   functors.typed_message_and_caching.single_to_group.message_received =
       [this](const routing::SingleToGroupMessage& /*message*/) {};
   functors.typed_message_and_caching.group_to_group.message_received =
@@ -102,7 +95,5 @@ void AccountGetter::OnNetworkStatusChange(int updated_network_health) {
                                  network_health_condition_variable_, routing_.kNodeId());
   });
 }
-
-}  // namespace detail
 
 }  // namespace maidsafe

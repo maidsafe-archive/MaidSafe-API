@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/account_getter.h"
+#include "maidsafe/account_getter.h"
 
 #include "maidsafe/common/test.h"
 

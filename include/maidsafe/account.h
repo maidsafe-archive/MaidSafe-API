@@ -21,30 +21,35 @@
 
 #include <cstdint>
 #include <memory>
-#include <string>
 
 #include "boost/asio/ip/address.hpp"
 #include "boost/date_time/posix_time/ptime.hpp"
 
 #include "maidsafe/common/config.h"
-#include "maidsafe/common/tagged_value.h"
 #include "maidsafe/common/types.h"
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/passport/passport.h"
 
-#include "maidsafe/detail/account_handler.h"
-
 namespace maidsafe {
 
-namespace test { class AccountTest; }
+struct Account;
+
+// Used when saving account.  Updates 'timestamp', serialises the account, then encrypts this.
+// Throws on error.
+ImmutableData EncryptAccount(const authentication::UserCredentials& user_credentials,
+                             Account& account);
 
 struct Account {
-  // Type-safety helper to avoid trying to parse a different serialised object as Account.
-  typedef TaggedValue<std::string, struct AccountTag> SerialisedType;
+  Account();
 
   // Used when creating a new user account, i.e. registering a new user on the network rather than
   // logging back in.  Creates a new default-constructed passport.  Throws on error.
   explicit Account(const passport::MaidAndSigner& maid_and_signer);
+
+  // Used when logging in.  Parses account from previously-serialised and encrypted account.  Throws
+  // on error.
+  Account(const ImmutableData& encrypted_account,
+          const authentication::UserCredentials& user_credentials);
 
   // Move-constructible and move-assignable only.
   Account(Account&& other) MAIDSAFE_NOEXCEPT;
@@ -57,24 +62,6 @@ struct Account {
   uint16_t port;
   // Optional elements - used by Drive if available.
   Identity unique_user_id, root_parent_id;
-
-  template <typename Account>
-  friend ImmutableData detail::EncryptAccount(
-      const authentication::UserCredentials& user_credentials, Account& account);
-  template <typename Account>
-  friend Account detail::DecryptAccount(const authentication::UserCredentials& user_credentials,
-                                        const ImmutableData& encrypted_account);
-  friend class test::AccountTest_BEH_SaveAndLogin_Test;
-  friend class test::AccountTest_BEH_MoveConstructAndAssign_Test;
-
- private:
-  // Used when saving account.  Updates 'timestamp' and returns serialised representation of this
-  // struct.  Throws on error.
-  SerialisedType Serialise(const authentication::UserCredentials& user_credentials);
-
-  // Used when logging in.  Parses account from previously-serialised account.  Throws on error.
-  explicit Account(SerialisedType serialised_account,
-                            const authentication::UserCredentials& user_credentials);
 };
 
 void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT;
