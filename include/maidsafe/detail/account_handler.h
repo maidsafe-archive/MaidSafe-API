@@ -33,9 +33,6 @@ class AccountGetter;
 
 namespace detail {
 
-Identity GetAccountLocation(const authentication::UserCredentials::Keyword& keyword,
-                            const authentication::UserCredentials::Pin& pin);
-
 class AccountHandler {
  public:
   // This constructor should be used before logging in to an existing account, i.e. where the

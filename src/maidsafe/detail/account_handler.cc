@@ -52,10 +52,7 @@ AccountHandler::AccountHandler(Account&& account,
   // TODO(Prakash) Validate credentials
   Identity account_location{ GetAccountLocation(*user_credentials_.keyword,
                                                 *user_credentials_.pin) };
-  LOG(kVerbose) << "Account location: " << HexSubstr(account_location);
   ImmutableData encrypted_account{ EncryptAccount(user_credentials_, account_) };
-  LOG(kVerbose) << "Immutable encrypted Account data name: "
-                << HexSubstr(encrypted_account.name()->string());
   try {
     LOG(kVerbose) << "Put encrypted_account";
     auto put_future = maid_node_nfs.Put(encrypted_account);
@@ -92,7 +89,6 @@ void AccountHandler::Login(authentication::UserCredentials&& user_credentials,
 
   Identity account_location{ GetAccountLocation(*user_credentials.keyword,
                                                 *user_credentials.pin) };
-  LOG(kVerbose) << "Account location: " << HexSubstr(account_location);
   try {
     auto versions_future =
         account_getter.data_getter().GetVersions(MutableData::Name(account_location));
@@ -121,8 +117,6 @@ void AccountHandler::Save(nfs_client::MaidNodeNfs& maid_node_nfs) {
   on_scope_exit strong_guarantee{ on_scope_exit::RevertValue(account_.timestamp) };
 
   ImmutableData encrypted_account(EncryptAccount(user_credentials_, account_));
-  LOG(kVerbose) << " Immutable encrypted new Account data name: "
-                << HexSubstr(encrypted_account.name()->string());
   try {
     auto put_future = maid_node_nfs.Put(encrypted_account);
     put_future.get();
@@ -131,7 +125,6 @@ void AccountHandler::Save(nfs_client::MaidNodeNfs& maid_node_nfs) {
     assert(current_account_version_.id != new_account_version.id);
     Identity account_location{ GetAccountLocation(*user_credentials_.keyword,
                                                   *user_credentials_.pin) };
-    LOG(kVerbose) << "Account location: " << HexSubstr(account_location);
     auto put_version_future = maid_node_nfs.PutVersion(MutableData::Name(account_location),
                                                        current_account_version_,
                                                        new_account_version);
