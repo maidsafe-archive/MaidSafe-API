@@ -64,7 +64,7 @@ TEST(PrivateClientTest, FUNC_Login) {
       std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get();
 }
 
-TEST(ClientTest, FUNC_SaveAccount) {
+TEST(PrivateClientTest, FUNC_SaveAccount) {
   const int kCount{ 10 };
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
