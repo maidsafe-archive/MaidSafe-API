@@ -28,7 +28,7 @@
 #include "maidsafe/common/data_types/immutable_data.h"
 #include "maidsafe/common/data_types/mutable_data.h"
 
-#include "maidsafe/account_getter.h"
+#include "maidsafe/detail/account_getter.h"
 
 namespace maidsafe {
 

@@ -25,13 +25,13 @@
 #include "maidsafe/common/data_types/structured_data_versions.h"
 #include "maidsafe/nfs/client/maid_node_nfs.h"
 
-#include "maidsafe/account.h"
+#include "maidsafe/detail/account.h"
 
 namespace maidsafe {
 
-class AccountGetter;
-
 namespace detail {
+
+class AccountGetter;
 
 class AccountHandler {
  public:
@@ -68,7 +68,6 @@ class AccountHandler {
   StructuredDataVersions::VersionName current_account_version_;
   authentication::UserCredentials user_credentials_;
 };
-
 
 }  // namespace detail
 

@@ -18,7 +18,7 @@
 
 option optimize_for = LITE_RUNTIME;
 
-package maidsafe.protobuf;
+package maidsafe.detail.protobuf;
 
 message Account {
   required bytes serialised_passport = 1;

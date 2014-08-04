@@ -25,8 +25,8 @@ extern "C" char **environ;
 #include "maidsafe/common/test.h"
 #include "maidsafe/routing/parameters.h"
 
-#include "maidsafe/account.h"
-#include "maidsafe/account_getter.h"
+#include "maidsafe/detail/account.h"
+#include "maidsafe/detail/account_getter.h"
 #include "maidsafe/tests/test_utils.h"
 
 namespace maidsafe {
@@ -36,9 +36,11 @@ namespace test {
 TEST(PrivateClientTest, FUNC_CreateAccount) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-                               std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple)).get();
+  std::future<PrivateClient> private_client_future{
+      PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+          std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)) };
+  PrivateClient private_client{ private_client_future.get() };
+  private_client.Logout();
 }
 
 TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
@@ -48,49 +50,31 @@ TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
     auto user_credentials_tuple(GetRandomUserCredentialsTuple());
     PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                  std::get<1>(user_credentials_tuple),
-                                 std::get<2>(user_credentials_tuple)).get();
+                                 std::get<2>(user_credentials_tuple)).get().Logout();
   }
 }
 
 TEST(PrivateClientTest, FUNC_Login) {
   routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-                               std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple)).get();
-  PrivateClient::Login(std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
-                       std::get<2>(user_credentials_tuple));
-}
-
-TEST(ClientTest, FUNC_LoginWithAccountGetter) {
-  routing::Parameters::append_local_live_port_endpoint = true;
-  auto account_getter_future(AccountGetter::CreateAccountGetter());
-  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-                               std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple));
-  std::shared_ptr<AccountGetter> account_getter{ account_getter_future.get() };
-  PrivateClient::Login(std::get<0>(user_credentials_tuple), std::get<1>(user_credentials_tuple),
-                       std::get<2>(user_credentials_tuple), account_getter.get()).get();
+  PrivateClient private_client{ PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get() };
+  private_client.Logout();
+  private_client = PrivateClient::Login(std::get<0>(user_credentials_tuple),
+      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get();
 }
 
 TEST(ClientTest, FUNC_SaveAccount) {
   const int kCount{ 10 };
   routing::Parameters::append_local_live_port_endpoint = true;
-  auto account_getter_future(AccountGetter::CreateAccountGetter());
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-                               std::get<1>(user_credentials_tuple),
-                               std::get<2>(user_credentials_tuple));
-  std::shared_ptr<AccountGetter> account_getter{ account_getter_future.get() };
-  PrivateClient private_client{ PrivateClient::Login(std::get<0>(user_credentials_tuple),
-                                                     std::get<1>(user_credentials_tuple),
-                                                     std::get<2>(user_credentials_tuple),
-                                                     account_getter.get()).get() };
+  PrivateClient private_client{ PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get() };
   for (int i(0); i != kCount; ++i) {
     private_client.SaveAccount();
-    LOG(kInfo) << "Save account successful !";
+    LOG(kInfo) << "Save account successful.";
   }
+  private_client.Logout();
 }
 
 // TODO(Team)  move to nfs

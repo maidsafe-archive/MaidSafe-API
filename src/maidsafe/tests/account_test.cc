@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/account.h"
+#include "maidsafe/detail/account.h"
 
 #include <memory>
 
@@ -26,6 +26,8 @@
 #include "maidsafe/tests/test_utils.h"
 
 namespace maidsafe {
+
+namespace detail {
 
 namespace test {
 
@@ -133,5 +135,7 @@ TEST(AccountTest, FUNC_MoveConstructAndAssign) {
 }
 
 }  // namespace test
+
+}  // namespace detail
 
 }  // namespace maidsafe

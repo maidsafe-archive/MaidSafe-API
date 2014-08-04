@@ -16,7 +16,7 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/account.h"
+#include "maidsafe/detail/account.h"
 
 #include <utility>
 
@@ -25,9 +25,11 @@
 #include "maidsafe/common/utils.h"
 #include "maidsafe/common/authentication/user_credential_utils.h"
 
-#include "maidsafe/account.pb.h"
+#include "maidsafe/detail/account.pb.h"
 
 namespace maidsafe {
+
+namespace detail {
 
 ImmutableData EncryptAccount(const authentication::UserCredentials& user_credentials,
                              Account& account) {
@@ -103,5 +105,7 @@ void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT {
   swap(lhs.unique_user_id, rhs.unique_user_id);
   swap(lhs.root_parent_id, rhs.root_parent_id);
 }
+
+}  // namespace detail
 
 }  // namespace maidsafe

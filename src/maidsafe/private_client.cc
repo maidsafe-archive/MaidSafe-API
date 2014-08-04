@@ -23,7 +23,7 @@
 #include "maidsafe/common/error.h"
 #include "maidsafe/common/log.h"
 #include "maidsafe/common/make_unique.h"
-#include "maidsafe/account_getter.h"
+#include "maidsafe/detail/account_getter.h"
 
 namespace maidsafe {
 
@@ -54,7 +54,7 @@ PrivateClient& PrivateClient::operator=(PrivateClient other) {
 }
 
 PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
-                             AccountGetter& account_getter)
+                             detail::AccountGetter& account_getter)
     : maid_node_nfs_(), account_handler_() {
   account_handler_.Login(ConvertToCredentials(keyword, pin, password), account_getter);
   maid_node_nfs_ =
@@ -64,17 +64,14 @@ PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
 PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
                              passport::MaidAndSigner&& maid_and_signer)
     : maid_node_nfs_(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer)),
-      account_handler_(Account{ maid_and_signer }, ConvertToCredentials(keyword, pin, password),
-                       *maid_node_nfs_) {}
+      account_handler_(detail::Account{ maid_and_signer },
+                       ConvertToCredentials(keyword, pin, password), *maid_node_nfs_) {}
 
-std::future<PrivateClient> PrivateClient::Login(Keyword keyword, Pin pin, Password password,
-                                                AccountGetter* account_getter) {
+std::future<PrivateClient> PrivateClient::Login(Keyword keyword, Pin pin, Password password) {
   return std::async(std::launch::async, [=] {
-      if (account_getter)
-        return PrivateClient{ keyword, pin, password, *account_getter };
-      std::unique_ptr<AccountGetter> temp_account_getter{
-          AccountGetter::CreateAccountGetter().get() };
-      return PrivateClient{ keyword, pin, password, *temp_account_getter };
+      std::unique_ptr<detail::AccountGetter> account_getter{
+          detail::AccountGetter::CreateAccountGetter().get() };
+      return PrivateClient{ keyword, pin, password, *account_getter };
   });
 }
 
@@ -88,14 +85,9 @@ void PrivateClient::SaveAccount() {
   account_handler_.Save(*maid_node_nfs_);
 }
 
-PrivateClient::~PrivateClient() {
-  try {
-    account_handler_.Save(*maid_node_nfs_);
-    maid_node_nfs_->Stop();
-  }
-  catch (const std::exception& ex) {
-    LOG(kError) << "Error while saving account: " << boost::diagnostic_information(ex);
-  }
+void PrivateClient::Logout() {
+  account_handler_.Save(*maid_node_nfs_);
+  maid_node_nfs_->Stop();
 }
 
 void swap(PrivateClient& lhs, PrivateClient& rhs) MAIDSAFE_NOEXCEPT{

@@ -16,8 +16,8 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#ifndef MAIDSAFE_ACCOUNT_H_
-#define MAIDSAFE_ACCOUNT_H_
+#ifndef MAIDSAFE_DETAIL_ACCOUNT_H_
+#define MAIDSAFE_DETAIL_ACCOUNT_H_
 
 #include <cstdint>
 #include <memory>
@@ -31,6 +31,8 @@
 #include "maidsafe/passport/passport.h"
 
 namespace maidsafe {
+
+namespace detail {
 
 struct Account;
 
@@ -66,6 +68,8 @@ struct Account {
 
 void swap(Account& lhs, Account& rhs) MAIDSAFE_NOEXCEPT;
 
+}  // namespace detail
+
 }  // namespace maidsafe
 
-#endif  // MAIDSAFE_ACCOUNT_H_
+#endif  // MAIDSAFE_DETAIL_ACCOUNT_H_

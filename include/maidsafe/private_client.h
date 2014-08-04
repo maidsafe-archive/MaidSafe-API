@@ -34,7 +34,7 @@
 
 namespace maidsafe {
 
-class AccountGetter;
+namespace detail{ class AccountGetter; }
 
 class PrivateClient {
  public:
@@ -53,12 +53,8 @@ class PrivateClient {
   PrivateClient() : maid_node_nfs_(), account_handler_() {}
 #endif
 
-  // Retrieves and decrypts account info and logs in to an existing account.  Doesn't take ownership
-  // of 'account_getter'.  If 'account_getter' is not null, the caller must ensure that it lives
-  // until the returned future's value has been retrieved (i.e. 'future.get()' has been called).
-  // Throws on error.
-  static std::future<PrivateClient> Login(Keyword keyword, Pin pin, Password password,
-                                          AccountGetter* account_getter = nullptr);
+  // Retrieves and decrypts account info and logs in to an existing account.  Throws on error.
+  static std::future<PrivateClient> Login(Keyword keyword, Pin pin, Password password);
 
   // This function should be used when creating a new account, i.e. where a account has never
   // been put to the network.  Internally saves the first encrypted account after creating the new
@@ -68,11 +64,12 @@ class PrivateClient {
   // Throws on error, with strong exception guarantee.
   void SaveAccount();
 
-  ~PrivateClient();
+  // After calling, the class should be destructed as it is no longer connected to the network.
+  void Logout();
 
  private:
   // For already existing accounts.
-  PrivateClient(Keyword keyword, Pin pin, Password password, AccountGetter& account_getter);
+  PrivateClient(Keyword keyword, Pin pin, Password password, detail::AccountGetter& account_getter);
 
   // For new accounts.  Throws on failure to create account.
   PrivateClient(Keyword keyword, Pin pin, Password password,

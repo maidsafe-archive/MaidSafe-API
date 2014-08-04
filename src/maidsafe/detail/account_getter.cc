@@ -16,11 +16,13 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/account_getter.h"
+#include "maidsafe/detail/account_getter.h"
 
 #include "maidsafe/common/make_unique.h"
 
 namespace maidsafe {
+
+namespace detail {
 
 std::future<std::unique_ptr<AccountGetter>> AccountGetter::CreateAccountGetter() {
   return std::async(std::launch::async,
@@ -95,5 +97,7 @@ void AccountGetter::OnNetworkStatusChange(int updated_network_health) {
                                  network_health_condition_variable_, routing_.kNodeId());
   });
 }
+
+}  // namespace detail
 
 }  // namespace maidsafe

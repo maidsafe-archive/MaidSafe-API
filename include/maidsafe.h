@@ -19,8 +19,6 @@
 #ifndef MAIDSAFE_MAIDSAFE_H_  // NOLINT
 #define MAIDSAFE_MAIDSAFE_H_
 
-#include "maidsafe/account.h"
-#include "maidsafe/account_getter.h"
 #include "maidsafe/private_client.h"
 
 #endif  // MAIDSAFE_MAIDSAFE_H_  NOLINT

@@ -20,12 +20,11 @@
 
 #include "maidsafe/common/make_unique.h"
 #include "maidsafe/common/test.h"
-
+#include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/routing/parameters.h"
 
-#include "maidsafe/account.h"
-#include "maidsafe/account_getter.h"
-#include "maidsafe/common/authentication/user_credentials.h"
+#include "maidsafe/detail/account.h"
+#include "maidsafe/detail/account_getter.h"
 #include "maidsafe/tests/test_utils.h"
 
 namespace maidsafe {
