@@ -54,17 +54,17 @@ class PrivateClient {
 #endif
 
   // Retrieves and decrypts account info and logs in to an existing account.  Throws on error.
-  static std::future<PrivateClient> Login(Keyword keyword, Pin pin, Password password);
+  static std::future<std::unique_ptr<PrivateClient>> Login(Keyword keyword, Pin pin,
+                                                           Password password);
 
   // This function should be used when creating a new account, i.e. where a account has never
   // been put to the network.  Internally saves the first encrypted account after creating the new
   // account.  Throws on error.
-  static std::future<PrivateClient> CreateAccount(Keyword keyword, Pin pin, Password password);
+  static std::future<std::unique_ptr<PrivateClient>> CreateAccount(Keyword keyword, Pin pin,
+                                                                   Password password);
 
-  // Throws on error, with strong exception guarantee.
-  void SaveAccount();
-
-  // After calling, the class should be destructed as it is no longer connected to the network.
+  // Throws on error, with strong exception guarantee.  After calling, the class should be
+  // destructed as it is no longer connected to the network.
   void Logout();
 
  private:
