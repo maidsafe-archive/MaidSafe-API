@@ -48,6 +48,7 @@ class AccountHandler;
 // which makes use of this class.
 class AccountGetter {
  public:
+  ~AccountGetter();
   AccountGetter(const AccountGetter&) = delete;
   AccountGetter(AccountGetter&&) = delete;
   AccountGetter& operator=(const AccountGetter&) = delete;

@@ -37,7 +37,6 @@ namespace maidsafe {
 namespace test {
 
 TEST(PrivateClientTest, FUNC_CreateAccount) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   std::future<std::unique_ptr<PrivateClient>> private_client_future{
       PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
@@ -47,7 +46,6 @@ TEST(PrivateClientTest, FUNC_CreateAccount) {
 }
 
 TEST(PrivateClientTest, FUNC_LoginLogout) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   std::unique_ptr<PrivateClient> private_client{
       PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
@@ -59,7 +57,6 @@ TEST(PrivateClientTest, FUNC_LoginLogout) {
 
 TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
   const int kCount{ 10 };
-  routing::Parameters::append_local_live_port_endpoint = true;
   for (int i(0); i != kCount; ++i) {
     auto user_credentials_tuple(GetRandomUserCredentialsTuple());
     PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
@@ -70,7 +67,6 @@ TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
 
 // TODO(Team)  move to nfs
 // TEST(ClientTest, FUNC_Constructor) {
-//  routing::Parameters::append_local_live_port_endpoint = true;
 //  routing::BootstrapContacts bootstrap_contacts;
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
 //  {
@@ -83,7 +79,6 @@ TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
 // }
 
 // TEST(ClientTest, FUNC_RegisterVault) {
-//  routing::Parameters::append_local_live_port_endpoint = true;
 //  routing::BootstrapContacts bootstrap_contacts;
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
 //  {

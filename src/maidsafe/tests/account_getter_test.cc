@@ -29,7 +29,6 @@ namespace detail {
 namespace test {
 
 TEST(AccountGetterTest, FUNC_Constructor) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   auto account_getter_future = AccountGetter::CreateAccountGetter();
   LOG(kVerbose) << "Started CreateAccountGetter thread";
   auto account_getter = account_getter_future.get();

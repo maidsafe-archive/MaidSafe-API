@@ -41,12 +41,20 @@ AccountGetter::AccountGetter()
   InitRouting();
 }
 
+AccountGetter::~AccountGetter() {
+data_getter_->Stop();
+}
+
 void AccountGetter::InitRouting() {
   routing::Functors functors{ InitialiseRoutingCallbacks() };
   routing_.Join(functors);
-  // FIXME BEFORE_RELEASE discuss this
+  // FIXME BEFORE_RELEASE discuss: parallel attempts, max no. of endpoints to try,
+  // prioritise live ports. To reduce the blocking duration in case of no network connectivity
   std::unique_lock<std::mutex> lock{ network_health_mutex_ };
-  network_health_condition_variable_.wait(lock, [this] { return network_health_ == 100; });
+  network_health_condition_variable_.wait(lock, [this] {
+    return (network_health_ == 100) || (network_health_ < -300000); });
+  if (network_health_ < 0)
+    BOOST_THROW_EXCEPTION(MakeError(RoutingErrors::not_connected));
 }
 
 routing::Functors AccountGetter::InitialiseRoutingCallbacks() {

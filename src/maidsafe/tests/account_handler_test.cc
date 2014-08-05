@@ -34,7 +34,6 @@ namespace detail {
 namespace test {
 
 TEST(AccountHandlerTest, FUNC_Constructor) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   LOG(kInfo) << "Account Handler for exisiting account";
   {
      AccountHandler{};
@@ -68,7 +67,6 @@ TEST(AccountHandlerTest, FUNC_EncryptDecryptAccount) {
 }
 
 TEST(AccountHandlerTest, FUNC_Login) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   auto maid_and_signer(passport::CreateMaidAndSigner());
   auto account_getter_future(AccountGetter::CreateAccountGetter());
@@ -98,7 +96,6 @@ TEST(AccountHandlerTest, FUNC_Login) {
 }
 
 TEST(AccountHandlerTest, FUNC_Save) {
-  routing::Parameters::append_local_live_port_endpoint = true;
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
   auto maid_and_signer(passport::CreateMaidAndSigner());
   auto account_getter_future(AccountGetter::CreateAccountGetter());
