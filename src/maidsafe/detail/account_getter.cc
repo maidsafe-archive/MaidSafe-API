@@ -42,7 +42,7 @@ AccountGetter::AccountGetter()
 }
 
 AccountGetter::~AccountGetter() {
-data_getter_->Stop();
+  data_getter_->Stop();
 }
 
 void AccountGetter::InitRouting() {

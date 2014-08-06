@@ -22,6 +22,8 @@
 #include <string>
 #include <tuple>
 
+#include "maidsafe/common/error.h"
+#include "maidsafe/common/test.h"
 #include "maidsafe/common/authentication/user_credentials.h"
 
 namespace maidsafe {
@@ -34,6 +36,33 @@ authentication::UserCredentials GetRandomUserCredentials();
 
 authentication::UserCredentials MakeUserCredentials(
   const std::tuple<std::string, uint32_t, std::string>& credentials_tuple);
+
+template <typename ErrorCodeEnum>
+testing::AssertionResult ThrowsAs(std::function<void()> statement,
+                                  ErrorCodeEnum expected_error_code_value) {
+  static_assert(std::is_error_code_enum<ErrorCodeEnum>::value, "This must be an error code enum.");
+  std::error_code expected_code{ make_error_code(expected_error_code_value) };
+  std::ostringstream failure_message;
+  failure_message << "expected exception \"" << expected_code << "\" with message \""
+                  << expected_code.message() << "\", but it threw ";
+  try {
+    statement();
+    failure_message << "nothing";
+  }
+  catch (const maidsafe_error& error) {
+    if (expected_code == error.code())
+      return testing::AssertionSuccess();
+    else
+      failure_message << "\"" << error.code() << "\" with message \"" << error.what() << "\"";
+  }
+  catch (const std::exception& e) {
+    failure_message << "a std::exception with message \"" << e.what() << "\"";
+  }
+  catch (...) {
+    failure_message << "a different non-std:: exception";
+  }
+  return testing::AssertionFailure() << failure_message.str();
+}
 
 }  // namespace test
 

@@ -36,34 +36,96 @@ namespace maidsafe {
 
 namespace test {
 
-TEST(PrivateClientTest, FUNC_CreateAccount) {
+TEST(PrivateClientTest, FUNC_CreateValidAccount) {
   auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  LOG(kInfo) << "PrivateClientTest  -- Creating new account --";
   std::future<std::unique_ptr<PrivateClient>> private_client_future{
       PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-          std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)) };
-  std::unique_ptr<PrivateClient> private_client{ private_client_future.get() };
+                                   std::get<1>(user_credentials_tuple),
+                                   std::get<2>(user_credentials_tuple)) };
+  std::unique_ptr<PrivateClient> private_client;
+  EXPECT_NO_THROW(private_client = private_client_future.get());
   private_client->Logout();
 }
 
-TEST(PrivateClientTest, FUNC_LoginLogout) {
-  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-  std::unique_ptr<PrivateClient> private_client{
-      PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-          std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get() };
-  private_client->Logout();
-  private_client = PrivateClient::Login(std::get<0>(user_credentials_tuple),
-      std::get<1>(user_credentials_tuple), std::get<2>(user_credentials_tuple)).get();
-}
-
-TEST(PrivateClientTest, FUNC_CreateAccountMultiple) {
+TEST(PrivateClientTest, FUNC_CreateMultipleAccounts) {
   const int kCount{ 10 };
   for (int i(0); i != kCount; ++i) {
     auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-    PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
-                                 std::get<1>(user_credentials_tuple),
-                                 std::get<2>(user_credentials_tuple)).get()->Logout();
+    LOG(kInfo) << "PrivateClientTest  -- Creating account " + (i + 1);
+    std::future<std::unique_ptr<PrivateClient>> private_client_future{
+        PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+                                     std::get<1>(user_credentials_tuple),
+                                     std::get<2>(user_credentials_tuple)) };
+    std::unique_ptr<PrivateClient> private_client;
+    EXPECT_NO_THROW(private_client = private_client_future.get());
+    private_client->Logout();
   }
 }
+
+TEST(PrivateClientTest, FUNC_CreateDuplicateAccount) {
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  {
+    LOG(kInfo) << "PrivateClientTest  -- Creating First account --";
+    std::future<std::unique_ptr<PrivateClient>> private_client_future{
+        PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+                                     std::get<1>(user_credentials_tuple),
+                                     std::get<2>(user_credentials_tuple)) };
+    std::unique_ptr<PrivateClient> private_client;
+    EXPECT_NO_THROW(private_client = private_client_future.get());
+    private_client->Logout();
+  }
+  {
+    LOG(kInfo) << "PrivateClientTest  -- Creating Duplicate account --";
+    std::future<std::unique_ptr<PrivateClient>> private_client_future{
+        PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+                                     std::get<1>(user_credentials_tuple),
+                                     std::get<2>(user_credentials_tuple)) };
+    std::unique_ptr<PrivateClient> private_client;
+
+    // TODO(Prakash): Verify the error code being checked for as accurate
+    EXPECT_TRUE(ThrowsAs([&] { private_client = private_client_future.get(); },
+                         VaultErrors::account_already_exists));
+  }
+}
+
+TEST(PrivateClientTest, FUNC_ValidLogin) {
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  {
+    LOG(kInfo) << "PrivateClientTest  -- Creating new account --";
+    std::future<std::unique_ptr<PrivateClient>> private_client_future{
+        PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+                                     std::get<1>(user_credentials_tuple),
+                                     std::get<2>(user_credentials_tuple)) };
+    std::unique_ptr<PrivateClient> private_client;
+    EXPECT_NO_THROW(private_client = private_client_future.get());
+    private_client->Logout();
+  }
+  {
+    LOG(kInfo) << "PrivateClientTest  -- Login for existing account --";
+    std::unique_ptr<PrivateClient> private_client;
+    std::future<std::unique_ptr<PrivateClient>> private_client_future{
+        PrivateClient::Login(std::get<0>(user_credentials_tuple),
+                             std::get<1>(user_credentials_tuple),
+                             std::get<2>(user_credentials_tuple)) };
+    EXPECT_NO_THROW(private_client = private_client_future.get());
+    private_client->Logout();
+  }
+}
+
+TEST(PrivateClientTest, FUNC_InvalidLogin) {
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  LOG(kInfo) << "PrivateClientTest  -- Login for invalid account --";
+  std::unique_ptr<PrivateClient> private_client;
+  std::future<std::unique_ptr<PrivateClient>> private_client_future{
+      PrivateClient::Login(std::get<0>(user_credentials_tuple),
+                           std::get<1>(user_credentials_tuple),
+                           std::get<2>(user_credentials_tuple)) };
+  // TODO(Prakash): Verify the error code being checked for as accurate
+  EXPECT_TRUE(ThrowsAs([&] { private_client = private_client_future.get(); },
+                       VaultErrors::no_such_account));
+}
+
 
 // TODO(Team)  move to nfs
 // TEST(ClientTest, FUNC_Constructor) {
