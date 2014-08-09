@@ -64,9 +64,12 @@ routing::Functors AccountGetter::InitialiseRoutingCallbacks() {
       [this](const routing::GroupToSingleMessage& message) {
         data_getter_->HandleMessage(message);
       };
-
-  functors.network_status =
-      [this](const int& network_health) { OnNetworkStatusChange(network_health); };
+  // Copying routing node id as routing object on destruction fires network_status functor.
+  // As we take it in account getter's asio thread, it tries to re-enter routing after destruction
+  auto this_node_id = routing_->kNodeId();
+  functors.network_status = [this, this_node_id](const int& network_health) {
+      OnNetworkStatusChange(network_health, this_node_id);
+  };
   functors.close_nodes_change = [this](
       std::shared_ptr<routing::CloseNodesChange> /*close_nodes_change*/) {};
   functors.request_public_key = [this](const NodeId& node_id,
@@ -100,10 +103,10 @@ routing::Functors AccountGetter::InitialiseRoutingCallbacks() {
   return functors;
 }
 
-void AccountGetter::OnNetworkStatusChange(int updated_network_health) {
+void AccountGetter::OnNetworkStatusChange(int updated_network_health, const NodeId& node_id) {
   asio_service_.service().post([=] {
     routing::UpdateNetworkHealth(updated_network_health, network_health_, network_health_mutex_,
-                                 network_health_condition_variable_, routing_->kNodeId());
+                                 network_health_condition_variable_, node_id);
   });
 }
 

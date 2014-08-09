@@ -62,7 +62,7 @@ class AccountGetter {
   AccountGetter();
   void InitRouting();
   routing::Functors InitialiseRoutingCallbacks();
-  void OnNetworkStatusChange(int updated_network_health);
+  void OnNetworkStatusChange(int updated_network_health, const NodeId& this_node_id);
   nfs_client::DataGetter& data_getter() { return *data_getter_; }
 
   std::mutex network_health_mutex_;
