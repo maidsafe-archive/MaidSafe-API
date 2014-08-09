@@ -68,7 +68,7 @@ class AccountGetter {
   std::mutex network_health_mutex_;
   std::condition_variable network_health_condition_variable_;
   int network_health_;
-  routing::Routing routing_;
+  std::unique_ptr<routing::Routing> routing_;
   std::unique_ptr<nfs_client::DataGetter> data_getter_;
   nfs::detail::PublicPmidHelper public_pmid_helper_;
   AsioService asio_service_;

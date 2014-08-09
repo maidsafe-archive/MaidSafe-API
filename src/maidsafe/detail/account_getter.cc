@@ -33,21 +33,22 @@ AccountGetter::AccountGetter()
     : network_health_mutex_(),
       network_health_condition_variable_(),
       network_health_(-1),
-      routing_(),
+      routing_(maidsafe::make_unique<routing::Routing>()),
       data_getter_(),  // deferred construction until asio service is created
       public_pmid_helper_(),
       asio_service_(2) {
-  data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, routing_);
+  data_getter_ = maidsafe::make_unique<nfs_client::DataGetter>(asio_service_, *routing_);
   InitRouting();
 }
 
 AccountGetter::~AccountGetter() {
   data_getter_->Stop();
+  routing_.reset();
 }
 
 void AccountGetter::InitRouting() {
   routing::Functors functors{ InitialiseRoutingCallbacks() };
-  routing_.Join(functors);
+  routing_->Join(functors);
   // FIXME BEFORE_RELEASE discuss: parallel attempts, max no. of endpoints to try,
   // prioritise live ports. To reduce the blocking duration in case of no network connectivity
   std::unique_lock<std::mutex> lock{ network_health_mutex_ };
@@ -102,7 +103,7 @@ routing::Functors AccountGetter::InitialiseRoutingCallbacks() {
 void AccountGetter::OnNetworkStatusChange(int updated_network_health) {
   asio_service_.service().post([=] {
     routing::UpdateNetworkHealth(updated_network_health, network_health_, network_health_mutex_,
-                                 network_health_condition_variable_, routing_.kNodeId());
+                                 network_health_condition_variable_, routing_->kNodeId());
   });
 }
 
