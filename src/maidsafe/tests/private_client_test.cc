@@ -44,7 +44,7 @@ TEST(PrivateClientTest, FUNC_CreateValidAccount) {
                                    std::get<1>(user_credentials_tuple),
                                    std::get<2>(user_credentials_tuple)) };
   std::unique_ptr<PrivateClient> private_client;
-  EXPECT_NO_THROW(private_client = private_client_future.get());
+  private_client = private_client_future.get();
   private_client->Logout();
 }
 
@@ -58,7 +58,7 @@ TEST(PrivateClientTest, FUNC_CreateMultipleAccounts) {
                                      std::get<1>(user_credentials_tuple),
                                      std::get<2>(user_credentials_tuple)) };
     std::unique_ptr<PrivateClient> private_client;
-    EXPECT_NO_THROW(private_client = private_client_future.get());
+    ASSERT_NO_THROW(private_client = private_client_future.get());
     private_client->Logout();
   }
 }
@@ -72,7 +72,7 @@ TEST(PrivateClientTest, FUNC_CreateDuplicateAccount) {
                                      std::get<1>(user_credentials_tuple),
                                      std::get<2>(user_credentials_tuple)) };
     std::unique_ptr<PrivateClient> private_client;
-    EXPECT_NO_THROW(private_client = private_client_future.get());
+    ASSERT_NO_THROW(private_client = private_client_future.get());
     private_client->Logout();
   }
   {
@@ -98,7 +98,7 @@ TEST(PrivateClientTest, FUNC_ValidLogin) {
                                      std::get<1>(user_credentials_tuple),
                                      std::get<2>(user_credentials_tuple)) };
     std::unique_ptr<PrivateClient> private_client;
-    EXPECT_NO_THROW(private_client = private_client_future.get());
+    ASSERT_NO_THROW(private_client = private_client_future.get());
     private_client->Logout();
   }
   {
@@ -108,7 +108,7 @@ TEST(PrivateClientTest, FUNC_ValidLogin) {
         PrivateClient::Login(std::get<0>(user_credentials_tuple),
                              std::get<1>(user_credentials_tuple),
                              std::get<2>(user_credentials_tuple)) };
-    EXPECT_NO_THROW(private_client = private_client_future.get());
+    ASSERT_NO_THROW(private_client = private_client_future.get());
     private_client->Logout();
   }
 }
