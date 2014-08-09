@@ -44,7 +44,7 @@ TEST(PrivateClientTest, FUNC_CreateValidAccount) {
                                    std::get<1>(user_credentials_tuple),
                                    std::get<2>(user_credentials_tuple)) };
   std::unique_ptr<PrivateClient> private_client;
-  private_client = private_client_future.get();
+  ASSERT_NO_THROW(private_client = private_client_future.get());
   private_client->Logout();
 }
 
