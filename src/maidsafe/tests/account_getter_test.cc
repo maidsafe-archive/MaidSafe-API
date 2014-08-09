@@ -31,7 +31,8 @@ namespace test {
 TEST(AccountGetterTest, FUNC_Constructor) {
   auto account_getter_future = AccountGetter::CreateAccountGetter();
   LOG(kVerbose) << "Started CreateAccountGetter thread";
-  auto account_getter = account_getter_future.get();
+  std::unique_ptr<AccountGetter> account_getter;
+  ASSERT_NO_THROW(account_getter = account_getter_future.get());
 }
 
 }  // namespace test
