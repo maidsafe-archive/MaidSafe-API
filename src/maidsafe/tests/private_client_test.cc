@@ -52,7 +52,7 @@ TEST(PrivateClientTest, FUNC_CreateMultipleAccounts) {
   const int kCount{ 10 };
   for (int i(0); i != kCount; ++i) {
     auto user_credentials_tuple(GetRandomUserCredentialsTuple());
-    LOG(kInfo) << "PrivateClientTest  -- Creating account " + (i + 1);
+    LOG(kInfo) << "PrivateClientTest  -- Creating account " + std::to_string(i + 1);
     std::future<std::unique_ptr<PrivateClient>> private_client_future{
         PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                      std::get<1>(user_credentials_tuple),
