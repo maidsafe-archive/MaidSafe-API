@@ -85,7 +85,7 @@ TEST(PrivateClientTest, FUNC_CreateDuplicateAccount) {
 
     // TODO(Prakash): Verify the error code being checked for as accurate
     EXPECT_TRUE(ThrowsAs([&] { private_client = private_client_future.get(); },
-                         VaultErrors::account_already_exists));
+                         VaultErrors::data_already_exists));
   }
 }
 
