@@ -81,10 +81,8 @@ TEST(PrivateClientTest, FUNC_CreateDuplicateAccount) {
         PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
                                      std::get<1>(user_credentials_tuple),
                                      std::get<2>(user_credentials_tuple)) };
-    std::unique_ptr<PrivateClient> private_client;
-
     // TODO(Prakash): Verify the error code being checked for as accurate
-    EXPECT_TRUE(ThrowsAs([&] { private_client = private_client_future.get(); },
+    EXPECT_TRUE(ThrowsAs([&] { private_client_future.get(); },
                          VaultErrors::data_already_exists));
   }
 }
