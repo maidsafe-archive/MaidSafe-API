@@ -80,8 +80,13 @@ std::future<std::unique_ptr<PrivateClient>> PrivateClient::Login(Keyword keyword
 std::future<std::unique_ptr<PrivateClient>> PrivateClient::CreateAccount(Keyword keyword, Pin pin,
                                                                          Password password) {
   return std::async(std::launch::async, [=] {
-      return std::move(std::unique_ptr<PrivateClient>{
-          new PrivateClient{ keyword, pin, password, passport::CreateMaidAndSigner() } });
+    std::unique_ptr<PrivateClient> ptr;
+    try {
+      ptr.reset(new PrivateClient{ keyword, pin, password, passport::CreateMaidAndSigner() });
+    } catch (...) {
+      throw;
+    }
+    return std::move(ptr);
   });
 }
 
