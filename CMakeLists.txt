@@ -92,7 +92,7 @@ endif()
 ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles} ${ConvenienceHeader})
 
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
+target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt maidsafe_drive)
 
 if(MaidsafeTesting)
   ms_add_executable(test_api "Tests/API" ${ApiNonNetworkTestsAllFiles})
