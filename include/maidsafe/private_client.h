@@ -68,7 +68,7 @@ class PrivateClient {
   void Logout();
 
   // Mounts network drive
-  void Mount();
+  void Mount(const boost::filesystem::path& mount_path, const boost::filesystem::path& drive_name);
 
  private:
   // For already existing accounts.

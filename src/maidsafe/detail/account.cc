@@ -57,7 +57,8 @@ Account::Account() : passport(), timestamp(), ip(), port(0), unique_user_id(), r
 
 Account::Account(const passport::MaidAndSigner& maid_and_signer)
     : passport(maidsafe::make_unique<passport::Passport>(maid_and_signer)),
-      timestamp(), ip(), port(0), unique_user_id(), root_parent_id() {}
+      timestamp(), ip(), port(0), unique_user_id(RandomString(64)),
+      root_parent_id(RandomString(64)) {}
 
 Account::Account(const ImmutableData& encrypted_account,
                  const authentication::UserCredentials& user_credentials)

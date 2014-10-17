@@ -25,7 +25,10 @@ extern "C" char **environ;
 #include <future>
 #include <memory>
 
+#include "boost/filesystem.hpp"
+
 #include "maidsafe/common/test.h"
+#include "maidsafe/common/application_support_directories.h"
 #include "maidsafe/routing/parameters.h"
 
 #include "maidsafe/detail/account.h"
@@ -124,6 +127,39 @@ TEST(PrivateClientTest, FUNC_InvalidLogin) {
                        VaultErrors::no_such_account));
 }
 
+TEST(PrivateClientTest, FUNC_MountDrive) {
+  auto user_credentials_tuple(GetRandomUserCredentialsTuple());
+  LOG(kInfo) << "PrivateClientTest  -- Creating new account --";
+  std::future<std::unique_ptr<PrivateClient>> private_client_future{
+      PrivateClient::CreateAccount(std::get<0>(user_credentials_tuple),
+                                   std::get<1>(user_credentials_tuple),
+                                   std::get<2>(user_credentials_tuple)) };
+  std::unique_ptr<PrivateClient> private_client;
+  ASSERT_NO_THROW(private_client = private_client_future.get());
+
+  boost::filesystem::path mount_path, drive_name;
+
+#ifdef MAIDSAFE_WIN32
+    mount_path = drive::GetNextAvailableDrivePath();
+#else
+    mount_path = boost::filesystem::unique_path(
+        boost::filesystem::temp_directory_path() / "MaidSafe_Private_Client_%%%%-%%%%-%%%%");
+    ASSERT_NO_THROW(boost::filesystem::create_directories(mount_path));
+    ASSERT_TRUE(boost::filesystem::exists(mount_path));
+#endif
+  drive_name = RandomAlphaNumericString(32);
+  private_client->Mount(mount_path, drive_name);
+  std::string file_name("file_");
+  for (auto index(0); index < 10; ++index) {
+    WriteFile(boost::filesystem::path(mount_path / std::string(file_name + std::to_string(index))),
+              RandomAlphaNumericString(10000));
+  }
+  for (auto index(0); index < 10; ++index) {
+    EXPECT_TRUE(boost::filesystem::exists(
+        boost::filesystem::path(mount_path / std::string(file_name + std::to_string(index)))));
+  }
+  Sleep(std::chrono::seconds(1000));
+}
 
 // TODO(Team)  move to nfs
 // TEST(ClientTest, FUNC_Constructor) {

@@ -94,11 +94,22 @@ void PrivateClient::Logout() {
   maid_node_nfs_->Stop();
 }
 
-void PrivateClient::Mount() {
+void PrivateClient::Mount(const boost::filesystem::path& mount_path,
+                          const boost::filesystem::path& drive_name) {
   drive::Options options;
-  // BEFORE_RELEASE enusre check_data and monitor_parent are fine.
+  options.mount_path = mount_path;
+  options.drive_name = drive_name;
   options.unique_id = account_handler_.account().unique_user_id;
   options.root_parent_id = account_handler_.account().root_parent_id;
+
+  crypto::AES256Key symm_key{ RandomString(crypto::AES256_KeySize) };
+  crypto::AES256InitialisationVector symm_iv{ RandomString(crypto::AES256_IVSize) };
+  crypto::CipherText encrypted_maid(passport::EncryptMaid(
+      account_handler_.account().passport->GetMaid(), symm_key, symm_iv));
+
+  options.encrypted_maid = encrypted_maid->string();
+  options.symm_key = symm_key.string();
+  options.symm_iv = symm_iv.string();
   drive_launcher_.reset(new drive::Launcher(options));
 }
 
