@@ -137,7 +137,7 @@ TEST(PrivateClientTest, FUNC_MountDrive) {
   std::unique_ptr<PrivateClient> private_client;
   ASSERT_NO_THROW(private_client = private_client_future.get());
 
-  boost::filesystem::path mount_path, drive_name;
+  boost::filesystem::path mount_path, drive_name(RandomAlphaNumericString(32));
 
 #ifdef MAIDSAFE_WIN32
     mount_path = drive::GetNextAvailableDrivePath();
@@ -147,18 +147,17 @@ TEST(PrivateClientTest, FUNC_MountDrive) {
     ASSERT_NO_THROW(boost::filesystem::create_directories(mount_path));
     ASSERT_TRUE(boost::filesystem::exists(mount_path));
 #endif
-  drive_name = RandomAlphaNumericString(32);
   private_client->Mount(mount_path, drive_name);
   std::string file_name("file_");
-  for (auto index(0); index < 10; ++index) {
+  unsigned int files_count(100), file_size(1024);
+  for (unsigned int index(0); index < files_count; ++index) {
     WriteFile(boost::filesystem::path(mount_path / std::string(file_name + std::to_string(index))),
-              RandomAlphaNumericString(10000));
+              RandomAlphaNumericString(file_size));
   }
-  for (auto index(0); index < 10; ++index) {
+  for (unsigned int index(0); index < files_count; ++index) {
     EXPECT_TRUE(boost::filesystem::exists(
         boost::filesystem::path(mount_path / std::string(file_name + std::to_string(index)))));
   }
-  Sleep(std::chrono::seconds(1000));
 }
 
 // TODO(Team)  move to nfs
