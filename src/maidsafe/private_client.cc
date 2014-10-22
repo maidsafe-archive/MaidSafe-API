@@ -94,15 +94,19 @@ void PrivateClient::Logout() {
   maid_node_nfs_->Stop();
 }
 
-void PrivateClient::Mount(const boost::filesystem::path& mount_path,
-                          const boost::filesystem::path& drive_name) {
+void PrivateClient::Mount(const boost::filesystem::path& drive_name,
+                          const boost::filesystem::path& mount_path) {
   crypto::AES256Key symm_key{ RandomString(crypto::AES256_KeySize) };
   crypto::AES256InitialisationVector symm_iv{ RandomString(crypto::AES256_IVSize) };
   crypto::CipherText encrypted_maid(passport::EncryptMaid(
       account_handler_.account().passport->GetMaid(), symm_key, symm_iv));
 
   drive::Options options;
+#ifdef MAIDSAFE_WIN32
+  options.mount_path = drive::GetNextAvailableDrivePath();
+#else
   options.mount_path = mount_path;
+#endif
   options.drive_name = drive_name;
   options.unique_id = account_handler_.account().unique_user_id;
   options.root_parent_id = account_handler_.account().root_parent_id;
