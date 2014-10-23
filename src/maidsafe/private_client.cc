@@ -72,8 +72,14 @@ std::future<std::unique_ptr<PrivateClient>> PrivateClient::Login(Keyword keyword
   return std::async(std::launch::async, [=] {
       std::unique_ptr<detail::AccountGetter> account_getter{
           detail::AccountGetter::CreateAccountGetter().get() };
-      return std::move(std::unique_ptr<PrivateClient>{
-          new PrivateClient{ keyword, pin, password, *account_getter } });
+      std::unique_ptr<PrivateClient> ptr;
+      try {
+        ptr.reset(new PrivateClient{ keyword, pin, password, *account_getter });
+      }
+      catch (...) {
+        throw;
+      }
+      return std::move(ptr);
   });
 }
 
