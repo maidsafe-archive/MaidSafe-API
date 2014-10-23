@@ -68,8 +68,12 @@ class PrivateClient {
   void Logout();
 
   // Mounts network drive
-  void Mount(const boost::filesystem::path& drive_name,
-             const boost::filesystem::path& mount_path = boost::filesystem::path());
+#ifdef MAIDSAFE_WIN32
+  boost::filesystem::path Mount(const boost::filesystem::path& drive_name);
+#else
+  boost::filesystem::path Mount(const boost::filesystem::path& drive_name,
+                                const boost::filesystem::path& mount_path);
+#endif
 
  private:
   // For already existing accounts.
