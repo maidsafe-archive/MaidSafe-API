@@ -94,7 +94,7 @@ ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ApiDetailAllFiles} ${Conveni
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(maidsafe_api maidsafe_nfs_client maidsafe_passport maidsafe_encrypt)
 
-if(MaidsafeTesting)
+if(INCLUDE_TESTS)
   ms_add_executable(test_api "Tests/API" ${ApiNonNetworkTestsAllFiles})
   target_include_directories(test_api PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(test_api maidsafe_api maidsafe_test)
@@ -116,7 +116,7 @@ include(standard_flags)
 #==================================================================================================#
 # Tests                                                                                            #
 #==================================================================================================#
-if(MaidsafeTesting)
+if(INCLUDE_TESTS)
   ms_add_default_tests()
   ms_add_gtests(test_api)
   ms_add_network_gtests(network_test_api)
@@ -130,7 +130,7 @@ endif()
 install(TARGETS maidsafe_api COMPONENT Development CONFIGURATIONS Debug Release ARCHIVE DESTINATION lib)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ COMPONENT Development DESTINATION include)
 
-if(MaidsafeTesting)
+if(INCLUDE_TESTS)
   install(TARGETS test_api network_test_api COMPONENT Tests CONFIGURATIONS Debug RUNTIME DESTINATION bin/debug)
   install(TARGETS test_api network_test_api COMPONENT Tests CONFIGURATIONS Release RUNTIME DESTINATION bin)
 endif()
