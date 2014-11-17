@@ -29,8 +29,8 @@
 #include "maidsafe/common/config.h"
 #include "maidsafe/passport/passport.h"
 #include "maidsafe/nfs/client/maid_node_nfs.h"
-
 #include "maidsafe/detail/account_handler.h"
+#include "maidsafe/drive/tools/launcher.h"
 
 namespace maidsafe {
 
@@ -57,7 +57,7 @@ class PrivateClient {
   static std::future<std::unique_ptr<PrivateClient>> Login(Keyword keyword, Pin pin,
                                                            Password password);
 
-  // This function should be used when creating a new account, i.e. where a account has never
+  // This function should be used when creating a new account, i.e. where an account has never
   // been put to the network.  Internally saves the first encrypted account after creating the new
   // account.  Throws on error.
   static std::future<std::unique_ptr<PrivateClient>> CreateAccount(Keyword keyword, Pin pin,
@@ -66,6 +66,14 @@ class PrivateClient {
   // Throws on error, with strong exception guarantee.  After calling, the class should be
   // destructed as it is no longer connected to the network.
   void Logout();
+
+  // Mounts network drive
+#ifdef MAIDSAFE_WIN32
+  boost::filesystem::path Mount(const boost::filesystem::path& drive_name);
+#else
+  boost::filesystem::path Mount(const boost::filesystem::path& drive_name,
+                                const boost::filesystem::path& mount_path);
+#endif
 
  private:
   // For already existing accounts.
@@ -77,6 +85,7 @@ class PrivateClient {
 
   std::shared_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
   detail::AccountHandler account_handler_;
+  std::unique_ptr<drive::Launcher> drive_launcher_;
 };
 
 }  // namespace maidsafe
