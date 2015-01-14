@@ -71,7 +71,7 @@ class AccountGetter {
   std::unique_ptr<routing::Routing> routing_;
   std::unique_ptr<nfs_client::DataGetter> data_getter_;
   nfs::detail::PublicPmidHelper public_pmid_helper_;
-  AsioService asio_service_;
+  BoostAsioService asio_service_;
 };
 
 }  // namespace detail
