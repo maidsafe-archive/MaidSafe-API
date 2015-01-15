@@ -31,7 +31,7 @@ namespace maidsafe {
 struct DirectoryInfo {
   enum class AccessRights { kReadOnly, kReadWrite };
 
-  DirectoryInfo() = default;
+  DirectoryInfo() : path(), parent_id(), directory_id(), access_rights(AccessRights::kReadOnly) {}
 
   DirectoryInfo(const DirectoryInfo&) = default;
 
