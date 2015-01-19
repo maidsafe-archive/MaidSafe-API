@@ -27,9 +27,8 @@
 
 namespace maidsafe {
 
-
 struct DirectoryInfo {
-  enum class AccessRights { kReadOnly, kReadWrite };
+  enum class AccessRights { kNone, kReadOnly, kReadWrite };
 
   DirectoryInfo() : path(), parent_id(), directory_id(), access_rights(AccessRights::kReadOnly) {}
 
@@ -76,6 +75,10 @@ struct DirectoryInfo {
   drive::DirectoryId directory_id;
   AccessRights access_rights;
 };
+
+inline bool operator<(const DirectoryInfo& lhs, const DirectoryInfo& rhs) {
+  return lhs.path < rhs.path;
+}
 
 }  // namespace maidsafe
 

@@ -19,7 +19,7 @@
 #ifndef MAIDSAFE_API_H_
 #define MAIDSAFE_API_H_
 
-#include <vector>
+#include <set>
 
 #include "maidsafe/common/rsa.h"
 #include "maidsafe/common/types.h"
@@ -30,7 +30,7 @@ struct DirectoryInfo;
 
 // Throws on error.  The return value is the list of directories which this particular app is
 // entitled to access.
-std::vector<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Port port);
+std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Port port);
 
 asymm::Keys GenerateKeyPair();
 

@@ -22,6 +22,8 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "cereal/types/set.hpp"
+
 #include "maidsafe/common/asio_service.h"
 #include "maidsafe/common/error.h"
 #include "maidsafe/common/log.h"
@@ -40,7 +42,7 @@ struct ReplyHandler {
     try {
       std::lock_guard<std::mutex> lock{mutex};
       reply_received = true;
-      directories = ConvertFromString<std::vector<DirectoryInfo>>(std::move(message));
+      directories = ConvertFromString<std::set<DirectoryInfo>>(std::move(message));
     } catch (const std::exception& e) {
       LOG(kError) << boost::diagnostic_information(e);
       std::lock_guard<std::mutex> lock{mutex};
@@ -59,7 +61,7 @@ struct ReplyHandler {
     cond_var.notify_one();
   }
 
-  std::vector<DirectoryInfo> directories;
+  std::set<DirectoryInfo> directories;
   std::mutex mutex;
   std::condition_variable cond_var;
   bool reply_received{false};
@@ -67,7 +69,7 @@ struct ReplyHandler {
 
 }  // unnamed namespace
 
-std::vector<DirectoryInfo> RegisterSessionKey(asymm::PublicKey public_key, tcp::Port port) {
+std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Port port) {
   ReplyHandler reply_handler;
   try {
     AsioService asio_service{1};
