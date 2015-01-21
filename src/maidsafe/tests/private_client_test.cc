@@ -131,10 +131,10 @@ TEST(PrivateClientTest, FUNC_InvalidLogin) {
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
 //  {
 //    auto nfs_new_account =
-//        nfs_client::MaidNodeNfs::MakeShared(maid_and_signer, bootstrap_contacts);
+//        nfs_client::MaidClient::MakeShared(maid_and_signer, bootstrap_contacts);
 //  }
 //  LOG(kInfo) << "joining existing account";
-//  auto nfs_existing_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer.first,
+//  auto nfs_existing_account = nfs_client::MaidClient::MakeShared(maid_and_signer.first,
 //                                                                  bootstrap_contacts);
 // }
 
@@ -142,11 +142,11 @@ TEST(PrivateClientTest, FUNC_InvalidLogin) {
 //  routing::BootstrapContacts bootstrap_contacts;
 //  auto maid_and_signer(passport::CreateMaidAndSigner());
 //  {
-//    auto nfs_new_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer,
+//    auto nfs_new_account = nfs_client::MaidClient::MakeShared(maid_and_signer,
 //                           bootstrap_contacts);
 //  }
 //  std::cout << "joining existing account" << std::endl;
-//  auto nfs_existing_account = nfs_client::MaidNodeNfs::MakeShared(maid_and_signer.first,
+//  auto nfs_existing_account = nfs_client::MaidClient::MakeShared(maid_and_signer.first,
 //                                                                  bootstrap_contacts);
 //  passport::Anpmid anpmid;
 //  passport::Pmid pmid(anpmid);

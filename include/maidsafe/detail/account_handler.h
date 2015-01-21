@@ -23,7 +23,7 @@
 #include "maidsafe/common/types.h"
 #include "maidsafe/common/authentication/user_credentials.h"
 #include "maidsafe/common/data_types/structured_data_versions.h"
-#include "maidsafe/nfs/client/maid_node_nfs.h"
+#include "maidsafe/nfs/client/maid_client.h"
 
 #include "maidsafe/detail/account.h"
 
@@ -40,10 +40,10 @@ class AccountHandler {
   AccountHandler();
 
   // This constructor should be used when creating a new account, i.e. where a account has never
-  // been put to the network.  'maid_node_nfs' should already be joined to the network.  Internally
+  // been put to the network.  'maid_client' should already be joined to the network.  Internally
   // saves the first account after creating the new account.  Throws on error.
   AccountHandler(Account&& account, authentication::UserCredentials&& user_credentials,
-                 nfs_client::MaidNodeNfs& maid_node_nfs);
+                 nfs_client::MaidClient& maid_client);
 
   // Move-constructible and move-assignable only.
   AccountHandler(AccountHandler&& other) MAIDSAFE_NOEXCEPT;
@@ -56,9 +56,9 @@ class AccountHandler {
   // Provides strong exception guarantee.
   void Login(authentication::UserCredentials&& user_credentials, AccountGetter& account_getter);
 
-  // Saves account on the network using 'maid_node_nfs', which should already be joined to the
+  // Saves account on the network using 'maid_client', which should already be joined to the
   // network.  Throws on error, with strong exception guarantee.
-  void Save(nfs_client::MaidNodeNfs& maid_node_nfs);
+  void Save(nfs_client::MaidClient& maid_client);
 
   Account& account() { return account_; }
   const Account& account() const { return account_; }

@@ -28,7 +28,7 @@
 
 #include "maidsafe/common/config.h"
 #include "maidsafe/passport/passport.h"
-#include "maidsafe/nfs/client/maid_node_nfs.h"
+#include "maidsafe/nfs/client/maid_client.h"
 
 #include "maidsafe/detail/account_handler.h"
 
@@ -50,7 +50,7 @@ class PrivateClient {
   PrivateClient(const PrivateClient&) = delete;
 #if defined(_MSC_VER) && _MSC_VER == 1800  // VS 2013
   // A bug in MSVC 2013 requires anything returned in a std::future to be default-constructible.
-  PrivateClient() : maid_node_nfs_(), account_handler_() {}
+  PrivateClient() : maid_client_(), account_handler_() {}
 #endif
 
   // Retrieves and decrypts account info and logs in to an existing account.  Throws on error.
@@ -75,7 +75,7 @@ class PrivateClient {
   PrivateClient(Keyword keyword, Pin pin, Password password,
                 passport::MaidAndSigner&& maid_and_signer);
 
-  std::shared_ptr<nfs_client::MaidNodeNfs> maid_node_nfs_;
+  std::shared_ptr<nfs_client::MaidClient> maid_client_;
   detail::AccountHandler account_handler_;
 };
 
