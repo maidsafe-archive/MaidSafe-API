@@ -93,7 +93,7 @@ if(INCLUDE_TESTS)
   ms_add_executable(test_api "Tests/API" ${ApiTestsAllFiles})
   target_include_directories(test_api PRIVATE ${PROJECT_SOURCE_DIR}/src)
   target_link_libraries(test_api maidsafe_api maidsafe_test)
-  add_dependencies(test_api launcher)
+  add_dependencies(test_api dummy_launcher)
 endif()
 
 ms_rename_outdated_built_exes()

@@ -18,6 +18,7 @@
 
 #include "maidsafe/directory_info.h"
 
+#include "maidsafe/common/crypto.h"
 #include "maidsafe/common/test.h"
 #include "maidsafe/common/utils.h"
 #include "maidsafe/common/serialisation/serialisation.h"
@@ -44,11 +45,15 @@ TEST(DirectoryInfoTest, BEH_ConstructAndAssign) {
 
   // C'tor taking value
   const DirectoryInfo directory_info1(
-      RandomAlphaNumericString(100), drive::ParentId{Identity{RandomAlphaNumericString(64)}},
-      Identity{RandomAlphaNumericString(64)}, DirectoryInfo::AccessRights::kReadOnly);
+      RandomAlphaNumericString(100),
+      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
+      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
+      DirectoryInfo::AccessRights::kReadOnly);
   const DirectoryInfo directory_info2(
-      RandomAlphaNumericString(100), drive::ParentId{Identity{RandomAlphaNumericString(64)}},
-      Identity{RandomAlphaNumericString(64)}, DirectoryInfo::AccessRights::kReadWrite);
+      RandomAlphaNumericString(100),
+      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
+      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
+      DirectoryInfo::AccessRights::kReadWrite);
 
   // Copy and move
   DirectoryInfo copied(directory_info1);
@@ -66,8 +71,10 @@ TEST(DirectoryInfoTest, BEH_ConstructAndAssign) {
 
 TEST(DirectoryInfoTest, BEH_Serialisation) {
   const DirectoryInfo directory_info(
-      RandomAlphaNumericString(100), drive::ParentId{Identity{RandomAlphaNumericString(64)}},
-      Identity{RandomAlphaNumericString(64)}, DirectoryInfo::AccessRights::kReadOnly);
+      RandomAlphaNumericString(100),
+      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
+      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
+      DirectoryInfo::AccessRights::kReadOnly);
   auto serialised = Serialise(directory_info);
   auto parsed = Parse<DirectoryInfo>(serialised);
   EXPECT_TRUE(Matches(directory_info, parsed));
