@@ -45,7 +45,7 @@ authentication::UserCredentials ConvertToCredentials(PrivateClient::Keyword keyw
 }  // unamed namespace
 
 PrivateClient::PrivateClient(PrivateClient&& other) MAIDSAFE_NOEXCEPT
-    : maid_node_nfs_(std::move(other.maid_node_nfs_)),
+    : maid_client_(std::move(other.maid_client_)),
       account_handler_(std::move(other.account_handler_)) {}
 
 PrivateClient& PrivateClient::operator=(PrivateClient other) {
@@ -55,17 +55,17 @@ PrivateClient& PrivateClient::operator=(PrivateClient other) {
 
 PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
                              detail::AccountGetter& account_getter)
-    : maid_node_nfs_(), account_handler_() {
+    : maid_client_(), account_handler_() {
   account_handler_.Login(ConvertToCredentials(keyword, pin, password), account_getter);
-  maid_node_nfs_ =
-      nfs_client::MaidNodeNfs::MakeShared(account_handler_.account().passport->GetMaid());
+  maid_client_ =
+      nfs_client::MaidClient::MakeShared(account_handler_.account().passport->GetMaid());
 }
 
 PrivateClient::PrivateClient(Keyword keyword, Pin pin, Password password,
                              passport::MaidAndSigner&& maid_and_signer)
-    : maid_node_nfs_(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer)),
+    : maid_client_(nfs_client::MaidClient::MakeShared(maid_and_signer)),
       account_handler_(detail::Account{ maid_and_signer },
-                       ConvertToCredentials(keyword, pin, password), *maid_node_nfs_) {}
+                       ConvertToCredentials(keyword, pin, password), *maid_client_) {}
 
 std::future<std::unique_ptr<PrivateClient>> PrivateClient::Login(Keyword keyword, Pin pin,
                                                                  Password password) {
@@ -97,13 +97,13 @@ std::future<std::unique_ptr<PrivateClient>> PrivateClient::CreateAccount(Keyword
 }
 
 void PrivateClient::Logout() {
-  account_handler_.Save(*maid_node_nfs_);
-  maid_node_nfs_->Stop();
+  account_handler_.Save(*maid_client_);
+  maid_client_->Stop();
 }
 
 void swap(PrivateClient& lhs, PrivateClient& rhs) MAIDSAFE_NOEXCEPT{
   using std::swap;
-  swap(lhs.maid_node_nfs_, rhs.maid_node_nfs_);
+  swap(lhs.maid_client_, rhs.maid_client_);
   swap(lhs.account_handler_, rhs.account_handler_);
 }
 

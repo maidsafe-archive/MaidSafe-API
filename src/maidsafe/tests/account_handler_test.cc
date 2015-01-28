@@ -42,10 +42,10 @@ TEST(AccountHandlerTest, FUNC_Constructor) {
   LOG(kInfo) << "Account Handler for new account";
   {
     auto maid_and_signer(passport::CreateMaidAndSigner());
-    auto maid_node_nfs(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer));
+    auto maid_client(nfs_client::MaidClient::MakeShared(maid_and_signer));
     Account account{ maid_and_signer };
     authentication::UserCredentials user_credentials{ GetRandomUserCredentials() };
-    AccountHandler{ std::move(account), std::move(user_credentials), *maid_node_nfs };
+    AccountHandler{ std::move(account), std::move(user_credentials), *maid_client };
   }
 }
 
@@ -72,10 +72,10 @@ TEST(AccountHandlerTest, FUNC_Login) {
   auto account_getter_future(AccountGetter::CreateAccountGetter());
   {
     LOG(kInfo) << "AccountHandlerTest -- Creating new account --";
-    auto maid_node_nfs(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer));
+    auto maid_client(nfs_client::MaidClient::MakeShared(maid_and_signer));
     Account account{ maid_and_signer };
     authentication::UserCredentials user_credentials{ MakeUserCredentials(user_credentials_tuple) };
-    AccountHandler{ std::move(account), std::move(user_credentials), *maid_node_nfs };
+    AccountHandler{ std::move(account), std::move(user_credentials), *maid_client };
   }
   try {
     LOG(kInfo) << "AccountHandlerTest -- Login for existing account --";
@@ -86,8 +86,8 @@ TEST(AccountHandlerTest, FUNC_Login) {
     account_handler.Login(std::move(user_credentials), *account_getter);
     LOG(kInfo) << "Login successful.";
     ASSERT_EQ(maid_and_signer.first.name(), account_handler.account().passport->GetMaid().name());
-    auto maid_node_nfs(
-        nfs_client::MaidNodeNfs::MakeShared(account_handler.account().passport->GetMaid()));
+    auto maid_client(
+        nfs_client::MaidClient::MakeShared(account_handler.account().passport->GetMaid()));
     LOG(kInfo) << "PrivateClient connection to account successful.";
   } catch (std::exception& e) {
     LOG(kError) << "Error on Login :" << boost::diagnostic_information(e);
@@ -101,10 +101,10 @@ TEST(AccountHandlerTest, FUNC_Save) {
   auto account_getter_future(AccountGetter::CreateAccountGetter());
   {
     LOG(kInfo) << "AccountHandlerTest -- Creating new account --";
-    auto maid_node_nfs(nfs_client::MaidNodeNfs::MakeShared(maid_and_signer));
+    auto maid_client(nfs_client::MaidClient::MakeShared(maid_and_signer));
     Account account{ maid_and_signer };
     authentication::UserCredentials user_credentials{ MakeUserCredentials(user_credentials_tuple) };
-    AccountHandler{ std::move(account), std::move(user_credentials), *maid_node_nfs };
+    AccountHandler{ std::move(account), std::move(user_credentials), *maid_client };
   }
   try {
     LOG(kInfo) << "AccountHandlerTest -- Login for existing account --";
@@ -115,13 +115,13 @@ TEST(AccountHandlerTest, FUNC_Save) {
     account_handler.Login(std::move(user_credentials), *account_getter);
     LOG(kInfo) << "Login successful.";
     ASSERT_EQ(maid_and_signer.first.name(), account_handler.account().passport->GetMaid().name());
-    auto maid_node_nfs(
-        nfs_client::MaidNodeNfs::MakeShared(account_handler.account().passport->GetMaid()));
+    auto maid_client(
+        nfs_client::MaidClient::MakeShared(account_handler.account().passport->GetMaid()));
     LOG(kInfo) << "PrivateClient connection to account successful.";
     LOG(kInfo) << "AccountHandlerTest -- Saving account --";
     boost::posix_time::ptime timestamp{ account_handler.account().timestamp };
     for (int i(0); i != 10; ++i) {
-      account_handler.Save(*maid_node_nfs);
+      account_handler.Save(*maid_client);
       // TODO(Team) - check account fields are unchanged except 'timestamp'.
       EXPECT_NE(timestamp, account_handler.account().timestamp);
       account_handler.account().timestamp -= boost::posix_time::seconds{ 10 };

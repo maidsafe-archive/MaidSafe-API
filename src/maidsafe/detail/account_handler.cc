@@ -44,7 +44,7 @@ AccountHandler::AccountHandler() : account_(), current_account_version_(), user_
 
 AccountHandler::AccountHandler(Account&& account,
                                authentication::UserCredentials&& user_credentials,
-                               nfs_client::MaidNodeNfs& maid_node_nfs)
+                               nfs_client::MaidClient& maid_client)
     : account_(std::move(account)),
       current_account_version_(),
       user_credentials_(std::move(user_credentials)) {
@@ -55,10 +55,10 @@ AccountHandler::AccountHandler(Account&& account,
   ImmutableData encrypted_account{ EncryptAccount(user_credentials_, account_) };
   try {
     LOG(kVerbose) << "Put encrypted_account";
-    auto put_future = maid_node_nfs.Put(encrypted_account);
+    auto put_future = maid_client.Put(encrypted_account);
     put_future.get();
     StructuredDataVersions::VersionName account_version(0, encrypted_account.name());
-    auto create_version_tree_future = maid_node_nfs.CreateVersionTree(
+    auto create_version_tree_future = maid_client.CreateVersionTree(
         MutableData::Name(account_location), account_version, 20, 1);
     create_version_tree_future.get();
     current_account_version_ = account_version;
@@ -66,7 +66,7 @@ AccountHandler::AccountHandler(Account&& account,
   }
   catch (const std::exception& e) {
     LOG(kError) << "Failed to store account: " << boost::diagnostic_information(e);
-    maid_node_nfs.Delete(encrypted_account.name());
+    maid_client.Delete(encrypted_account.name());
     // TODO(Fraser) BEFORE_RELEASE need to delete version tree here
     throw;
   }
@@ -112,20 +112,20 @@ void AccountHandler::Login(authentication::UserCredentials&& user_credentials,
   }
 }
 
-void AccountHandler::Save(nfs_client::MaidNodeNfs& maid_node_nfs) {
+void AccountHandler::Save(nfs_client::MaidClient& maid_client) {
   // The only member which is modified in this process is the account timestamp.
   on_scope_exit strong_guarantee{ on_scope_exit::RevertValue(account_.timestamp) };
 
   ImmutableData encrypted_account(EncryptAccount(user_credentials_, account_));
   try {
-    auto put_future = maid_node_nfs.Put(encrypted_account);
+    auto put_future = maid_client.Put(encrypted_account);
     put_future.get();
     StructuredDataVersions::VersionName new_account_version{ current_account_version_.index + 1,
                                                              encrypted_account.name() };
     assert(current_account_version_.id != new_account_version.id);
     Identity account_location{ GetAccountLocation(*user_credentials_.keyword,
                                                   *user_credentials_.pin) };
-    auto put_version_future = maid_node_nfs.PutVersion(MutableData::Name(account_location),
+    auto put_version_future = maid_client.PutVersion(MutableData::Name(account_location),
                                                        current_account_version_,
                                                        new_account_version);
     put_version_future.get();
@@ -134,7 +134,7 @@ void AccountHandler::Save(nfs_client::MaidNodeNfs& maid_node_nfs) {
     strong_guarantee.Release();
   } catch (const std::exception& e) {
     LOG(kError) << boost::diagnostic_information(e);
-    maid_node_nfs.Delete(encrypted_account.name());
+    maid_client.Delete(encrypted_account.name());
     throw;
   }
 }
