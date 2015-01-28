@@ -22,6 +22,7 @@
 #include <condition_variable>
 #include <mutex>
 
+#include "asio/io_service_strand.hpp"
 #include "cereal/types/set.hpp"
 
 #include "maidsafe/common/asio_service.h"
@@ -37,12 +38,12 @@ namespace maidsafe {
 namespace {
 
 struct ReplyHandler {
-  void OnMessage(std::string message) {
+  void OnMessage(SerialisedData message) {
     assert(!reply_received);
     try {
       std::lock_guard<std::mutex> lock{mutex};
       reply_received = true;
-      directories = ConvertFromString<std::set<DirectoryInfo>>(std::move(message));
+      directories = Parse<std::set<DirectoryInfo>>(std::move(message));
     } catch (const std::exception& e) {
       LOG(kError) << boost::diagnostic_information(e);
       std::lock_guard<std::mutex> lock{mutex};
@@ -73,10 +74,12 @@ std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Por
   ReplyHandler reply_handler;
   try {
     AsioService asio_service{1};
-    tcp::ConnectionPtr tcp_connection{tcp::Connection::MakeShared(asio_service, port)};
-    tcp_connection->Start([&](std::string message) { reply_handler.OnMessage(std::move(message)); },
-                          [&] { reply_handler.OnConnectionClosed(); });
-    tcp_connection->Send(ConvertToString(std::move(public_key)));
+    asio::io_service::strand strand{asio_service.service()};
+    tcp::ConnectionPtr tcp_connection{tcp::Connection::MakeShared(strand, port)};
+    tcp_connection->Start(
+        [&](SerialisedData message) { reply_handler.OnMessage(std::move(message)); },
+        [&] { reply_handler.OnConnectionClosed(); });
+    tcp_connection->Send(Serialise(std::move(public_key)));
     {
       std::unique_lock<std::mutex> lock{ reply_handler.mutex };
       reply_handler.cond_var.wait(lock, [&] {return reply_handler.reply_received; });
