@@ -19,6 +19,7 @@
 #ifndef MAIDSAFE_MAIDSAFE_H_  // NOLINT
 #define MAIDSAFE_MAIDSAFE_H_
 
-#include "maidsafe/private_client.h"
+#include "maidsafe/api.h"
+#include "maidsafe/directory_info.h"
 
 #endif  // MAIDSAFE_MAIDSAFE_H_  NOLINT

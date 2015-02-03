@@ -1,4 +1,4 @@
-/*  Copyright 2014 MaidSafe.net limited
+/*  Copyright 2015 MaidSafe.net limited
 
     This MaidSafe Software is licensed to you under (1) the MaidSafe.net Commercial License,
     version 1.0 or later, or (2) The General Public License (GPL), version 3, depending on which
@@ -16,27 +16,24 @@
     See the Licences for the specific language governing permissions and limitations relating to
     use of the MaidSafe Software.                                                                 */
 
-#include "maidsafe/detail/account_getter.h"
+#ifndef MAIDSAFE_API_H_
+#define MAIDSAFE_API_H_
 
-#include "maidsafe/common/test.h"
+#include <set>
 
-#include "maidsafe/routing/parameters.h"
+#include "maidsafe/common/rsa.h"
+#include "maidsafe/common/types.h"
 
 namespace maidsafe {
 
-namespace detail {
+struct DirectoryInfo;
 
-namespace test {
+// Throws on error.  The return value is the list of directories which this particular app is
+// entitled to access.
+std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Port port);
 
-TEST(AccountGetterTest, FUNC_Constructor) {
-  auto account_getter_future = AccountGetter::CreateAccountGetter();
-  LOG(kVerbose) << "Started CreateAccountGetter thread";
-  std::unique_ptr<AccountGetter> account_getter;
-  ASSERT_NO_THROW(account_getter = account_getter_future.get());
-}
-
-}  // namespace test
-
-}  // namespace detail
+asymm::Keys GenerateKeyPair();
 
 }  // namespace maidsafe
+
+#endif  // MAIDSAFE_API_H_
