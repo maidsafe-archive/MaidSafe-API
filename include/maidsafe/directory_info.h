@@ -23,7 +23,7 @@
 
 #include "boost/filesystem/path.hpp"
 
-#include "maidsafe/drive/config.h"
+#include "maidsafe/common/identity.h"
 
 namespace maidsafe {
 
@@ -50,8 +50,8 @@ struct DirectoryInfo {
     return *this;
   }
 
-  DirectoryInfo(boost::filesystem::path path_in, drive::ParentId parent_id_in,
-                drive::DirectoryId directory_id_in, AccessRights access_rights_in)
+  DirectoryInfo(boost::filesystem::path path_in, Identity parent_id_in, Identity directory_id_in,
+                AccessRights access_rights_in)
       : path(std::move(path_in)),
         parent_id(std::move(parent_id_in)),
         directory_id(std::move(directory_id_in)),
@@ -71,8 +71,8 @@ struct DirectoryInfo {
   }
 
   boost::filesystem::path path;
-  drive::ParentId parent_id;
-  drive::DirectoryId directory_id;
+  Identity parent_id;
+  Identity directory_id;
   AccessRights access_rights;
 };
 

@@ -81,8 +81,8 @@ std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Por
         [&] { reply_handler.OnConnectionClosed(); });
     tcp_connection->Send(Serialise(std::move(public_key)));
     {
-      std::unique_lock<std::mutex> lock{ reply_handler.mutex };
-      reply_handler.cond_var.wait(lock, [&] {return reply_handler.reply_received; });
+      std::unique_lock<std::mutex> lock{reply_handler.mutex};
+      reply_handler.cond_var.wait(lock, [&] { return reply_handler.reply_received; });
     }
     if (reply_handler.directories.empty())
       BOOST_THROW_EXCEPTION(MakeError(CommonErrors::uninitialised));
@@ -93,8 +93,6 @@ std::set<DirectoryInfo> RegisterAppSession(asymm::PublicKey public_key, tcp::Por
   return reply_handler.directories;
 }
 
-asymm::Keys GenerateKeyPair() {
-  return asymm::GenerateKeyPair();
-}
+asymm::Keys GenerateKeyPair() { return asymm::GenerateKeyPair(); }
 
 }  // namespace maidsafe

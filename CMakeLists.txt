@@ -87,7 +87,8 @@ ms_add_static_library(maidsafe_api ${ApiAllFiles} ${ConvenienceHeader})
 
 target_include_directories(maidsafe_api PUBLIC ${PROJECT_SOURCE_DIR}/include PRIVATE ${PROJECT_SOURCE_DIR}/src)
 # TODO - Once NFS has taken over Drive's duties, swap maidsafe_drive for maidsafe_nfs
-target_link_libraries(maidsafe_api maidsafe_drive)
+#target_link_libraries(maidsafe_api maidsafe_drive)
+target_link_libraries(maidsafe_api maidsafe_common)
 
 if(INCLUDE_TESTS)
   ms_add_executable(test_api "Tests/API" ${ApiTestsAllFiles})

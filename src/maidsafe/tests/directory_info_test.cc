@@ -30,9 +30,9 @@ namespace test {
 testing::AssertionResult Matches(const DirectoryInfo& expected, const DirectoryInfo& actual) {
   return (expected.path == actual.path && expected.parent_id == actual.parent_id &&
           expected.directory_id == actual.directory_id &&
-          expected.access_rights == actual.access_rights)
-             ? testing::AssertionSuccess()
-             : testing::AssertionFailure();
+          expected.access_rights == actual.access_rights) ?
+             testing::AssertionSuccess() :
+             testing::AssertionFailure();
 }
 
 TEST(DirectoryInfoTest, BEH_ConstructAndAssign) {
@@ -40,20 +40,16 @@ TEST(DirectoryInfoTest, BEH_ConstructAndAssign) {
   ASSERT_NO_THROW(DirectoryInfo());
   const DirectoryInfo directory_info;
   EXPECT_TRUE(directory_info.path.empty());
-  EXPECT_FALSE(directory_info.parent_id->IsInitialised());
+  EXPECT_FALSE(directory_info.parent_id.IsInitialised());
   EXPECT_FALSE(directory_info.directory_id.IsInitialised());
 
   // C'tor taking value
   const DirectoryInfo directory_info1(
-      RandomAlphaNumericString(100),
-      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
-      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
-      DirectoryInfo::AccessRights::kReadOnly);
+      RandomAlphaNumericString(100), Identity{RandomAlphaNumericBytes(identity_size)},
+      Identity{RandomAlphaNumericBytes(identity_size)}, DirectoryInfo::AccessRights::kReadOnly);
   const DirectoryInfo directory_info2(
-      RandomAlphaNumericString(100),
-      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
-      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
-      DirectoryInfo::AccessRights::kReadWrite);
+      RandomAlphaNumericString(100), Identity{RandomAlphaNumericBytes(identity_size)},
+      Identity{RandomAlphaNumericBytes(identity_size)}, DirectoryInfo::AccessRights::kReadWrite);
 
   // Copy and move
   DirectoryInfo copied(directory_info1);
@@ -71,10 +67,8 @@ TEST(DirectoryInfoTest, BEH_ConstructAndAssign) {
 
 TEST(DirectoryInfoTest, BEH_Serialisation) {
   const DirectoryInfo directory_info(
-      RandomAlphaNumericString(100),
-      drive::ParentId{Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)}},
-      Identity{RandomAlphaNumericString(crypto::SHA512::DIGESTSIZE)},
-      DirectoryInfo::AccessRights::kReadOnly);
+      RandomAlphaNumericString(100), Identity{RandomAlphaNumericBytes(identity_size)},
+      Identity{RandomAlphaNumericBytes(identity_size)}, DirectoryInfo::AccessRights::kReadOnly);
   auto serialised = Serialise(directory_info);
   auto parsed = Parse<DirectoryInfo>(serialised);
   EXPECT_TRUE(Matches(directory_info, parsed));
